@@ -1,0 +1,33 @@
+{
+  "system": {
+    "name": "KDT Aso",
+    "timezone": "Africa/Lagos",
+    "language": "en",
+    "maintenanceMode": false
+  },
+  "security": {
+    "sessionTimeout": 3600,
+    "maxLoginAttempts": 5,
+    "lockoutDuration": 900,
+    "requireMFA": false
+  },
+  "agents": {
+    "defaultModel": "claude-3-sonnet",
+    "maxConcurrentSessions": 10,
+    "sessionTimeout": 1800
+  },
+  "alerts": {
+    "autoEscalate": true,
+    "escalationTimes": {
+      "critical": 300,
+      "high": 900,
+      "medium": 3600,
+      "low": 86400
+    }
+  },
+  "voice": {
+    "enabled": true,
+    "defaultVoice": "adam",
+    "speed": 1
+  }
+}

@@ -1,0 +1,168 @@
+# KDT Aso — Standing Orders
+# Pre-authorized responses and automations
+
+standing_orders:
+
+  # === SURVEILLANCE TRIGGERS ===
+  
+  perimeter_alert:
+    trigger: "movement_detected_perimeter"
+    authority_level: 2
+    actions:
+      - agent: surveillance_officer
+        action: "confirm_and_track"
+      - agent: intelligence_officer
+        action: "check_known_associations"
+      - agent: watch_officer
+        action: "assess_threat_level"
+    escalation:
+      threshold: "unknown_pattern OR armed_individuals OR multiple_subjects"
+      notify: operator
+      stage: "qrf"
+    resolution:
+      if_benign: "log_and_close"
+      notify_operator: false
+      
+  geofence_breach:
+    trigger: "tracked_asset_leaves_geofence"
+    authority_level: 3
+    actions:
+      - agent: geospatial_officer
+        action: "track_and_alert"
+      - agent: watch_officer
+        action: "notify_immediately"
+    escalation:
+      always_notify: true
+
+  # === INTELLIGENCE TRIGGERS ===
+  
+  watchlist_match:
+    trigger: "watchlist_entity_detected"
+    authority_level: 3
+    actions:
+      - agent: intelligence_officer
+        action: "pull_full_profile"
+      - agent: surveillance_officer
+        action: "establish_surveillance_if_possible"
+      - agent: watch_officer
+        action: "alert_operator"
+    escalation:
+      always_notify: true
+      priority: high
+
+  new_threat_indicator:
+    trigger: "threat_indicator_detected"
+    authority_level: 3
+    actions:
+      - agent: intelligence_officer
+        action: "assess_and_analyze"
+      - agent: intel_analyst
+        action: "pattern_check"
+    escalation:
+      threshold: "credible_threat"
+      notify: operator
+      
+  # === OPERATIONAL TRIGGERS ===
+  
+  scheduled_patrol:
+    trigger: "patrol_time_reached"
+    authority_level: 1
+    actions:
+      - agent: operations_officer
+        action: "initiate_patrol_checklist"
+      - agent: comms_officer
+        action: "notify_patrol_personnel"
+    escalation:
+      threshold: "patrol_not_acknowledged"
+      notify: watch_officer
+
+  asset_offline:
+    trigger: "tracked_asset_no_signal"
+    authority_level: 2
+    actions:
+      - agent: geospatial_officer
+        action: "last_known_position"
+      - agent: logistics_officer
+        action: "check_maintenance_status"
+      - agent: watch_officer
+        action: "assess"
+    escalation:
+      threshold: "duration > 30min AND not_scheduled_maintenance"
+      notify: operator
+
+  # === COMMUNICATIONS TRIGGERS ===
+  
+  emergency_broadcast:
+    trigger: "emergency_declared"
+    authority_level: 5
+    actions:
+      - agent: comms_officer
+        action: "broadcast_all_channels"
+      - agent: watch_officer
+        action: "coordinate_response"
+    escalation:
+      always_notify: true
+      priority: critical
+      
+  sitrep_schedule:
+    trigger: "sitrep_time_reached"
+    authority_level: 1
+    actions:
+      - agent: admin_officer
+        action: "compile_sitrep"
+      - agent: comms_officer
+        action: "distribute_sitrep"
+    escalation:
+      notify_operator: false
+
+  # === MAINTENANCE TRIGGERS ===
+  
+  maintenance_due:
+    trigger: "asset_maintenance_due"
+    authority_level: 1
+    actions:
+      - agent: logistics_officer
+        action: "schedule_maintenance"
+      - agent: operations_officer
+        action: "adjust_availability"
+    escalation:
+      threshold: "overdue > 7days"
+      notify: operator
+
+  # === DAILY RHYTHM ===
+  
+  morning_brief:
+    trigger: "time == 0600"
+    authority_level: 1
+    actions:
+      - agent: watch_officer
+        action: "compile_overnight_summary"
+      - agent: intelligence_officer
+        action: "compile_intel_summary"
+      - agent: admin_officer
+        action: "prepare_brief"
+    delivery: operator
+
+  shift_change:
+    trigger: "shift_change_time"
+    authority_level: 1
+    actions:
+      - agent: watch_officer
+        action: "handoff_brief"
+      - agent: comms_officer
+        action: "log_shift_change"
+
+# === AUTHORITY DEFAULTS ===
+
+defaults:
+  notify_overnight: false  # Don't wake operator for Level 1-2
+  overnight_hours: "2200-0600"
+  log_all_actions: true
+  require_acknowledgment_above: 3  # Level 4+ needs Operator ack
+
+# === ESCALATION CHAIN ===
+
+escalation_chain:
+  - watch_officer      # First escalation point
+  - operations_officer # If Watch unavailable
+  - operator           # Final escalation

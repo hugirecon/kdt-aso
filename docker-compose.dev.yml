@@ -1,0 +1,36 @@
+# KDT Aso - Development Docker Compose
+# Hot-reload enabled for development
+
+version: '3.8'
+
+services:
+  kdt-aso-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: kdt-aso-dev
+    ports:
+      - "3001:3001"
+      - "3002:3002"
+    environment:
+      - NODE_ENV=development
+      - PORT=3001
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - ELEVENLABS_API_KEY=${ELEVENLABS_API_KEY:-}
+      - DASHBOARD_URL=http://localhost:3002
+    volumes:
+      - ./core:/app/core
+      - ./agents:/app/agents
+      - ./config:/app/config
+      - ./dashboard/src:/app/dashboard/src
+      - ./logs:/app/logs
+      - ./audio:/app/audio
+      - ./memory:/app/memory
+      - /app/node_modules
+      - /app/dashboard/node_modules
+    networks:
+      - kdt-dev-network
+
+networks:
+  kdt-dev-network:
+    driver: bridge

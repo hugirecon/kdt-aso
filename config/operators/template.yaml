@@ -1,0 +1,54 @@
+# Operator Profile Template
+# Copy and customize for each operator
+
+operator:
+  id: ""                          # Unique identifier
+  name: ""                        # Full name
+  title: ""                       # Rank/Title (Colonel, Chief, etc.)
+  callsign: ""                    # Optional callsign
+  
+  # How agents should address this operator
+  address_as: "Operator"          # Default, or title, or name
+  
+  # Access level
+  access:
+    level: "full"                 # full | restricted | read_only
+    sections:                     # Which sections they can task
+      - hero
+      - operations
+      - surveillance
+      - geospatial
+      - communications
+      - logistics
+      - admin
+      
+  # Notification preferences  
+  notifications:
+    preferred_channel: "text"     # voice | text | both
+    language: "en"                # Primary language
+    
+    # When to notify
+    overnight_critical_only: true
+    overnight_hours: "2200-0600"
+    
+    # What to notify
+    receive_alerts:
+      critical: true
+      high: true
+      medium: true
+      low: false                  # Don't bother with low priority
+      
+    # Daily rhythm
+    morning_brief: "0600"
+    evening_brief: null           # Optional evening brief time
+
+  # Standing order overrides
+  authority_overrides:
+    # Example: Allow this operator to pre-authorize QRF deployment
+    # qrf_deployment: "pre_authorized"
+    
+  # Preferences
+  preferences:
+    verbose_briefs: false         # Short and actionable vs. detailed
+    map_default_view: "operational_area"
+    timezone: "Africa/Lagos"      # WAT

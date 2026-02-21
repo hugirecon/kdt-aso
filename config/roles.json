@@ -1,0 +1,35 @@
+[
+  {
+    "id": "admin",
+    "name": "Administrator",
+    "permissions": [
+      "*"
+    ],
+    "description": "Full system access"
+  },
+  {
+    "id": "operator",
+    "name": "Operator",
+    "permissions": [
+      "dashboard:view",
+      "agents:interact",
+      "alerts:view",
+      "alerts:acknowledge",
+      "sensors:view",
+      "map:view",
+      "standing-orders:view"
+    ],
+    "description": "Standard operational access"
+  },
+  {
+    "id": "viewer",
+    "name": "Viewer",
+    "permissions": [
+      "dashboard:view",
+      "alerts:view",
+      "sensors:view",
+      "map:view"
+    ],
+    "description": "Read-only access"
+  }
+]

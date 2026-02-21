@@ -1,0 +1,47 @@
+# Dependencies
+node_modules
+dashboard/node_modules
+
+# Build artifacts
+dashboard/dist
+*.log
+
+# Git
+.git
+.gitignore
+
+# Environment files (copy manually or use secrets)
+.env
+.env.local
+.env.*.local
+
+# Development files
+*.md
+!README.md
+.vscode
+.idea
+*.swp
+*.swo
+
+# Test files
+__tests__
+*.test.js
+*.spec.js
+coverage
+
+# Docker files (not needed in image)
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# Logs and runtime data
+logs/*
+audio/*
+memory/*
+!logs/.gitkeep
+!audio/.gitkeep
+!memory/.gitkeep
+
+# OS files
+.DS_Store
+Thumbs.db

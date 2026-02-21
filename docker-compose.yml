@@ -1,0 +1,79 @@
+# KDT Aso - Docker Compose Configuration
+# Production-ready deployment with all services
+
+version: '3.8'
+
+services:
+  # Main KDT Aso Application
+  kdt-aso:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: kdt-aso
+    restart: unless-stopped
+    ports:
+      - "${PORT:-3001}:3001"
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - ELEVENLABS_API_KEY=${ELEVENLABS_API_KEY:-}
+      - JWT_SECRET=${JWT_SECRET:-kdt-aso-production-secret-change-me}
+      - DASHBOARD_URL=${DASHBOARD_URL:-http://localhost:3001}
+    volumes:
+      - ./logs:/app/logs
+      - ./audio:/app/audio
+      - ./memory:/app/memory
+      - ./config:/app/config:ro
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3001/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - kdt-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.kdt-aso.rule=Host(`aso.kdt.local`)"
+      - "traefik.http.services.kdt-aso.loadbalancer.server.port=3001"
+
+  # Optional: Redis for session storage (future scalability)
+  # redis:
+  #   image: redis:7-alpine
+  #   container_name: kdt-aso-redis
+  #   restart: unless-stopped
+  #   volumes:
+  #     - redis-data:/data
+  #   networks:
+  #     - kdt-network
+  #   healthcheck:
+  #     test: ["CMD", "redis-cli", "ping"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3
+
+  # Optional: Nginx reverse proxy with SSL
+  nginx:
+    image: nginx:alpine
+    container_name: kdt-aso-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - kdt-aso
+    networks:
+      - kdt-network
+    profiles:
+      - production
+
+networks:
+  kdt-network:
+    driver: bridge
+
+volumes:
+  redis-data:

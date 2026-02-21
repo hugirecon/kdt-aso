@@ -1,0 +1,23 @@
+{
+  "updatedAt": "2026-02-20T15:46:20.330Z",
+  "documents": [
+    {
+      "id": "03ff2b6f-e5ff-4c71-b9dc-b88e86018bc0",
+      "title": "SITREP: Abuja Operations Area",
+      "category": "sitrep",
+      "filename": "03ff2b6f-e5ff-4c71-b9dc-b88e86018bc0.md",
+      "author": "Intel Analyst",
+      "classification": "confidential",
+      "tags": [
+        "abuja",
+        "ops",
+        "daily"
+      ],
+      "relatedDocuments": [],
+      "createdAt": "2026-02-20T15:46:20.330Z",
+      "updatedAt": "2026-02-20T15:46:20.330Z",
+      "version": 1,
+      "size": 207
+    }
+  ]
+}

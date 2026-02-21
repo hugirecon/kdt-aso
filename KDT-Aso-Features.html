@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>KDT Aso — Feature List</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 0.75in;
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      line-height: 1.6;
+      color: #1a1a2e;
+      background: white;
+      padding: 40px;
+    }
+    
+    .cover {
+      text-align: center;
+      padding: 100px 40px;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      color: white;
+      margin: -40px -40px 40px -40px;
+      page-break-after: always;
+    }
+    
+    .cover h1 {
+      font-size: 48px;
+      font-weight: 700;
+      margin-bottom: 10px;
+      letter-spacing: 2px;
+    }
+    
+    .cover .subtitle {
+      font-size: 20px;
+      opacity: 0.9;
+      margin-bottom: 40px;
+    }
+    
+    .cover .tagline {
+      font-size: 16px;
+      opacity: 0.7;
+      margin-top: 60px;
+    }
+    
+    .cover .date {
+      margin-top: 20px;
+      font-size: 14px;
+      opacity: 0.6;
+    }
+    
+    .logo {
+      font-size: 80px;
+      margin-bottom: 30px;
+    }
+    
+    h2 {
+      font-size: 28px;
+      color: #0f3460;
+      margin: 40px 0 20px 0;
+      padding-bottom: 10px;
+      border-bottom: 3px solid #0f3460;
+    }
+    
+    h3 {
+      font-size: 20px;
+      color: #1a1a2e;
+      margin: 30px 0 15px 0;
+    }
+    
+    .feature-card {
+      background: #f8f9fa;
+      border-radius: 12px;
+      padding: 25px;
+      margin: 20px 0;
+      border-left: 4px solid #0f3460;
+    }
+    
+    .feature-card h3 {
+      margin-top: 0;
+      color: #0f3460;
+    }
+    
+    .feature-card ul {
+      margin: 15px 0 0 20px;
+    }
+    
+    .feature-card li {
+      margin: 8px 0;
+    }
+    
+    .screenshot {
+      margin: 30px 0;
+      text-align: center;
+      page-break-inside: avoid;
+    }
+    
+    .screenshot img {
+      max-width: 100%;
+      border-radius: 8px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+      border: 1px solid #ddd;
+    }
+    
+    .screenshot .caption {
+      margin-top: 10px;
+      font-size: 14px;
+      color: #666;
+      font-style: italic;
+    }
+    
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+      margin: 30px 0;
+    }
+    
+    .stat-box {
+      background: #0f3460;
+      color: white;
+      padding: 25px;
+      border-radius: 12px;
+      text-align: center;
+    }
+    
+    .stat-box .number {
+      font-size: 36px;
+      font-weight: 700;
+    }
+    
+    .stat-box .label {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      opacity: 0.8;
+      margin-top: 5px;
+    }
+    
+    .feature-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+    }
+    
+    .feature-table th,
+    .feature-table td {
+      padding: 12px 15px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+    
+    .feature-table th {
+      background: #0f3460;
+      color: white;
+      font-weight: 600;
+    }
+    
+    .feature-table tr:nth-child(even) {
+      background: #f8f9fa;
+    }
+    
+    .status-complete {
+      color: #28a745;
+      font-weight: 600;
+    }
+    
+    .page-break {
+      page-break-after: always;
+    }
+    
+    .toc {
+      background: #f8f9fa;
+      padding: 30px;
+      border-radius: 12px;
+      margin: 30px 0;
+    }
+    
+    .toc h3 {
+      margin-top: 0;
+    }
+    
+    .toc ul {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    
+    .toc li {
+      padding: 8px 0;
+      border-bottom: 1px solid #ddd;
+    }
+    
+    .toc li:last-child {
+      border-bottom: none;
+    }
+    
+    .footer {
+      margin-top: 60px;
+      padding-top: 20px;
+      border-top: 1px solid #ddd;
+      text-align: center;
+      color: #666;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Cover Page -->
+  <div class="cover">
+    <div class="logo">🛡️</div>
+    <h1>KDT Aso</h1>
+    <div class="subtitle">Autonomous Operations Platform</div>
+    <div class="tagline">Knight Division Tactical</div>
+    <div class="date">Feature Documentation — February 2026</div>
+  </div>
+
+  <!-- Stats Overview -->
+  <h2>Platform Overview</h2>
+  
+  <div class="stats-grid">
+    <div class="stat-box">
+      <div class="number">16</div>
+      <div class="label">Features</div>
+    </div>
+    <div class="stat-box">
+      <div class="number">11</div>
+      <div class="label">AI Agents</div>
+    </div>
+    <div class="stat-box">
+      <div class="number">7</div>
+      <div class="label">Languages</div>
+    </div>
+    <div class="stat-box">
+      <div class="number">100%</div>
+      <div class="label">Complete</div>
+    </div>
+  </div>
+
+  <p>KDT Aso is the central command and control platform for Knight Division Tactical operations. It provides real-time situational awareness, AI-powered staff assistance, secure communications, and comprehensive operational management.</p>
+
+  <!-- Table of Contents -->
+  <div class="toc">
+    <h3>📋 Features</h3>
+    <ul>
+      <li><strong>1.</strong> Authentication & Security</li>
+      <li><strong>2.</strong> Voice Interface</li>
+      <li><strong>3.</strong> Map/GIS Display</li>
+      <li><strong>4.</strong> Standing Orders</li>
+      <li><strong>5.</strong> Alert System</li>
+      <li><strong>6.</strong> Sensor Integrations</li>
+      <li><strong>7.</strong> Deployment Packaging</li>
+      <li><strong>8.</strong> Admin Configuration Panel</li>
+      <li><strong>9.</strong> Nigerian Languages (7)</li>
+      <li><strong>10.</strong> Test Suite</li>
+      <li><strong>11.</strong> Persistent Memory</li>
+      <li><strong>12.</strong> Mobile PWA</li>
+      <li><strong>13.</strong> Document Storage</li>
+      <li><strong>14.</strong> Offline Mode</li>
+      <li><strong>15.</strong> Backup System</li>
+      <li><strong>16.</strong> End-to-End Encryption</li>
+    </ul>
+  </div>
+
+  <div class="page-break"></div>
+
+  <!-- Main Dashboard Screenshot -->
+  <h2>Main Dashboard</h2>
+  
+  <div class="screenshot">
+    <img src="screenshots/01-main-dashboard.png" alt="Main Dashboard">
+    <div class="caption">Split view showing AI staff, alerts, standing orders, chat, and operations map</div>
+  </div>
+
+  <p>The main dashboard provides a unified view of all operational data. The split view combines chat with the operations map, while the sidebar shows AI staff status, active alerts, standing orders, and sensor status.</p>
+
+  <div class="page-break"></div>
+
+  <!-- Feature 1-4 -->
+  <h2>Core Features</h2>
+
+  <div class="feature-card">
+    <h3>1. Authentication & Security</h3>
+    <ul>
+      <li>JWT-based authentication with secure sessions</li>
+      <li>Role-based access control (RBAC)</li>
+      <li>Protected API routes with middleware</li>
+      <li>Session management with HTTP-only cookies</li>
+    </ul>
+  </div>
+
+  <div class="feature-card">
+    <h3>2. Voice Interface</h3>
+    <ul>
+      <li>Speech-to-text input for hands-free operation</li>
+      <li>Text-to-speech responses (ElevenLabs integration)</li>
+      <li>Voice commands for common operations</li>
+      <li>Real-time transcription</li>
+    </ul>
+  </div>
+
+  <div class="feature-card">
+    <h3>3. Map/GIS Display</h3>
+    <ul>
+      <li>Interactive Leaflet map with OpenStreetMap tiles</li>
+      <li>Marker types: Friendly, Hostile, Objective, POI</li>
+      <li>Area of operations overlay</li>
+      <li>Multiple map layers (Operational, Intelligence, Logistics)</li>
+    </ul>
+  </div>
+
+  <div class="feature-card">
+    <h3>4. Standing Orders</h3>
+    <ul>
+      <li>11 configurable standing orders</li>
+      <li>Time-based triggers (schedules)</li>
+      <li>Event-based triggers (conditions)</li>
+      <li>Automatic execution by AI agents</li>
+    </ul>
+  </div>
+
+  <div class="page-break"></div>
+
+  <!-- Map View Screenshot -->
+  <h2>Operations Map</h2>
+  
+  <div class="screenshot">
+    <img src="screenshots/05-map-view.png" alt="Operations Map">
+    <div class="caption">Full-screen operations map centered on Abuja with tactical markers</div>
+  </div>
+
+  <div class="page-break"></div>
+
+  <!-- Feature 5-8 -->
+  <h2>Operational Features</h2>
+
+  <div class="feature-card">
+    <h3>5. Alert System</h3>
+    <ul>
+      <li>Priority levels: Critical, High, Medium, Low</li>
+      <li>Real-time WebSocket notifications</li>
+      <li>Alert acknowledgment tracking</li>
+      <li>Automated escalation rules</li>
+    </ul>
+  </div>
+
+  <div class="feature-card">
+    <h3>6. Sensor Integrations</h3>
+    <ul>
+      <li>Support for multiple sensor types</li>
+      <li>RTSP/ONVIF camera integration</li>
+      <li>Real-time data streaming</li>
+      <li>Sensor status monitoring</li>
+    </ul>
+  </div>
+
+  <div class="feature-card">
+    <h3>7. Deployment Packaging</h3>
+    <ul>
+      <li>Docker containerization</li>
+      <li>Docker Compose orchestration</li>
+      <li>Production-ready Nginx configuration</li>
+      <li>Automated build scripts</li>
+    </ul>
+  </div>
+
+  <div class="feature-card">
+    <h3>8. Admin Configuration Panel</h3>
+    <ul>
+      <li>User management (add, edit, delete)</li>
+      <li>Role management with permissions</li>
+      <li>System settings configuration</li>
+      <li>Audit log viewing</li>
+    </ul>
+  </div>
+
+  <div class="page-break"></div>
+
+  <!-- Admin Panel Screenshot -->
+  <h2>Admin Panel</h2>
+  
+  <div class="screenshot">
+    <img src="screenshots/02-admin-panel.png" alt="Admin Panel">
+    <div class="caption">User management interface with role assignment</div>
+  </div>
+
+  <div class="screenshot">
+    <img src="screenshots/03-settings.png" alt="Settings">
+    <div class="caption">System settings including timezone and maintenance mode</div>
+  </div>
+
+  <div class="page-break"></div>
+
+  <!-- Feature 9-12 -->
+  <h2>Platform Features</h2>
+
+  <div class="feature-card">
+    <h3>9. Nigerian Languages</h3>
+    <ul>
+      <li>English (default)</li>
+      <li>Hausa — هَوُسَ</li>
+      <li>Yoruba — Èdè Yorùbá</li>
+      <li>Igbo — Asụsụ Igbo</li>
+      <li>Pidgin English</li>
+      <li>Fulfulde</li>
+      <li>Kanuri</li>
+    </ul>
+  </div>
+
+  <div class="feature-card">
+    <h3>10. Test Suite</h3>
+    <ul>
+      <li>Jest testing framework</li>
+      <li>API endpoint tests</li>
+      <li>Authentication flow tests</li>
+      <li>Integration tests</li>
+    </ul>
+  </div>
+
+  <div class="feature-card">
+    <h3>11. Persistent Memory</h3>
+    <ul>
+      <li>Agent memory storage and retrieval</li>
+      <li>Conversation context preservation</li>
+      <li>Operational event logging</li>
+      <li>Knowledge base with semantic search</li>
+    </ul>
+  </div>
+
+  <div class="feature-card">
+    <h3>12. Mobile PWA</h3>
+    <ul>
+      <li>Progressive Web App manifest</li>
+      <li>Install to home screen</li>
+      <li>Push notification support</li>
+      <li>Responsive mobile design</li>
+    </ul>
+  </div>
+
+  <div class="page-break"></div>
+
+  <!-- Chat View Screenshot -->
+  <h2>Chat Interface</h2>
+  
+  <div class="screenshot">
+    <img src="screenshots/04-chat-view.png" alt="Chat View">
+    <div class="caption">Chat interface with AI staff selection and activity feed</div>
+  </div>
+
+  <div class="page-break"></div>
+
+  <!-- Feature 13-16 -->
+  <h2>Security & Data Features</h2>
+
+  <div class="feature-card">
+    <h3>13. Document Storage</h3>
+    <ul>
+      <li>Categories: Intel, AAR, Mission, SITREP, Personnel, Asset, SOP</li>
+      <li>Full-text search</li>
+      <li>Document templates</li>
+      <li>Version tracking</li>
+    </ul>
+  </div>
+
+  <div class="feature-card">
+    <h3>14. Offline Mode</h3>
+    <ul>
+      <li>Service worker caching</li>
+      <li>Offline fallback page</li>
+      <li>Background sync when online</li>
+      <li>IndexedDB for offline data</li>
+    </ul>
+  </div>
+
+  <div class="feature-card">
+    <h3>15. Backup System</h3>
+    <ul>
+      <li>Automated scheduled backups</li>
+      <li>Compressed tar.gz archives</li>
+      <li>Checksum verification</li>
+      <li>Selective restore options</li>
+    </ul>
+  </div>
+
+  <div class="feature-card">
+    <h3>16. End-to-End Encryption</h3>
+    <ul>
+      <li>AES-256-GCM encryption</li>
+      <li>Secure key management</li>
+      <li>Session key generation</li>
+      <li>Message signing & verification</li>
+    </ul>
+  </div>
+
+  <div class="page-break"></div>
+
+  <!-- Offline Mode Screenshot -->
+  <h2>Offline Mode</h2>
+  
+  <div class="screenshot">
+    <img src="screenshots/06-offline-mode.png" alt="Offline Mode">
+    <div class="caption">Offline fallback page showing cached data availability</div>
+  </div>
+
+  <div class="page-break"></div>
+
+  <!-- Feature Summary Table -->
+  <h2>Feature Summary</h2>
+
+  <table class="feature-table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Feature</th>
+        <th>Status</th>
+        <th>Added</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>1</td>
+        <td>Authentication & Security</td>
+        <td class="status-complete">✅ Complete</td>
+        <td>Feb 18</td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td>Voice Interface</td>
+        <td class="status-complete">✅ Complete</td>
+        <td>Feb 18</td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td>Map/GIS Display</td>
+        <td class="status-complete">✅ Complete</td>
+        <td>Feb 18</td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td>Standing Orders</td>
+        <td class="status-complete">✅ Complete</td>
+        <td>Feb 18</td>
+      </tr>
+      <tr>
+        <td>5</td>
+        <td>Alert System</td>
+        <td class="status-complete">✅ Complete</td>
+        <td>Feb 19</td>
+      </tr>
+      <tr>
+        <td>6</td>
+        <td>Sensor Integrations</td>
+        <td class="status-complete">✅ Complete</td>
+        <td>Feb 19</td>
+      </tr>
+      <tr>
+        <td>7</td>
+        <td>Deployment Packaging</td>
+        <td class="status-complete">✅ Complete</td>
+        <td>Feb 20</td>
+      </tr>
+      <tr>
+        <td>8</td>
+        <td>Admin Config Panel</td>
+        <td class="status-complete">✅ Complete</td>
+        <td>Feb 20</td>
+      </tr>
+      <tr>
+        <td>9</td>
+        <td>Nigerian Languages (7)</td>
+        <td class="status-complete">✅ Complete</td>
+        <td>Feb 20</td>
+      </tr>
+      <tr>
+        <td>10</td>
+        <td>Test Suite</td>
+        <td class="status-complete">✅ Complete</td>
+        <td>Feb 20</td>
+      </tr>
+      <tr>
+        <td>11</td>
+        <td>Persistent Memory</td>
+        <td class="status-complete">✅ Complete</td>
+        <td>Feb 20</td>
+      </tr>
+      <tr>
+        <td>12</td>
+        <td>Mobile PWA</td>
+        <td class="status-complete">✅ Complete</td>
+        <td>Feb 20</td>
+      </tr>
+      <tr>
+        <td>13</td>
+        <td>Document Storage</td>
+        <td class="status-complete">✅ Complete</td>
+        <td>Feb 20</td>
+      </tr>
+      <tr>
+        <td>14</td>
+        <td>Offline Mode</td>
+        <td class="status-complete">✅ Complete</td>
+        <td>Feb 20</td>
+      </tr>
+      <tr>
+        <td>15</td>
+        <td>Backup System</td>
+        <td class="status-complete">✅ Complete</td>
+        <td>Feb 20</td>
+      </tr>
+      <tr>
+        <td>16</td>
+        <td>End-to-End Encryption</td>
+        <td class="status-complete">✅ Complete</td>
+        <td>Feb 20</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="footer">
+    <p>KDT Aso — Autonomous Operations Platform</p>
+    <p>Knight Division Tactical © 2026</p>
+  </div>
+</body>
+</html>

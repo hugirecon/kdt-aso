@@ -1,0 +1,100 @@
+# KDT Aso - System Configuration
+# Autonomous Operations Platform
+
+system:
+  name: "KDT Aso"
+  version: "0.1.0"
+  description: "Autonomous Operations Platform"
+  
+branding:
+  organization: "Knight Division Tactical"
+  product_name: "KDT Aso"
+  intel_brand: "KDT Hero"  # All intel functions attributed to Hero
+  
+operator:
+  default_address: "Operator"
+  # Individual profiles override this
+  
+agents:
+  # KDT Hero (Intelligence Branch)
+  hero:
+    enabled: true
+    personnel:
+      - intelligence_officer
+      - intel_analyst
+      - collection_manager
+  
+  # Operations Section
+  operations:
+    enabled: true
+    personnel:
+      - operations_officer
+      - watch_officer
+  
+  # Geospatial Section
+  geospatial:
+    enabled: true
+    personnel:
+      - geospatial_officer
+  
+  # Surveillance Section
+  surveillance:
+    enabled: true
+    personnel:
+      - surveillance_officer
+  
+  # Communications Section
+  communications:
+    enabled: true
+    personnel:
+      - comms_officer
+  
+  # Logistics Section
+  logistics:
+    enabled: true
+    personnel:
+      - logistics_officer
+  
+  # Admin Section
+  admin:
+    enabled: true
+    personnel:
+      - admin_officer
+
+autonomy:
+  # Default authority levels
+  levels:
+    0: "Report only - no action"
+    1: "Act and log - no notification"
+    2: "Act, log, notify after"
+    3: "Act, log, notify immediately"
+    4: "Require Operator approval"
+    5: "Require Commander approval"
+  
+  defaults:
+    routine_alerts: 1      # Handle silently
+    known_patterns: 2      # Handle, notify after
+    ambiguous: 4           # Require approval
+    critical: 5            # Escalate immediately
+
+notifications:
+  channels:
+    - voice
+    - text
+    - dashboard
+  
+  preferences:
+    daily_brief: "0600"
+    only_critical_overnight: true
+    overnight_hours: "2200-0600"
+
+languages:
+  primary: "en"
+  supported:
+    - en      # English
+    - ha      # Hausa
+    - yo      # Yoruba
+    - ig      # Igbo
+    - pcm     # Nigerian Pidgin
+    - fr      # French
+    - ar      # Arabic

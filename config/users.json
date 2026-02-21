@@ -1,0 +1,22 @@
+{
+  "users": [
+    {
+      "id": "admin",
+      "username": "admin",
+      "passwordHash": "$2b$10$9Vz7PSdiLqX.nauLL8Cb8Oc8WkLXgLIifEX3EeiipHi00hr637Xx6",
+      "name": "Administrator",
+      "title": "System Administrator",
+      "role": "admin",
+      "access": [
+        "hero",
+        "operations",
+        "surveillance",
+        "geospatial",
+        "communications",
+        "logistics",
+        "admin"
+      ],
+      "createdAt": "2026-02-19T00:42:28.191Z"
+    }
+  ]
+}

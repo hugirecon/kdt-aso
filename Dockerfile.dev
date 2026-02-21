@@ -1,0 +1,25 @@
+# KDT Aso - Development Dockerfile
+# Hot-reload enabled for development
+
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Install dependencies for both backend and dashboard
+COPY package*.json ./
+RUN npm install
+
+COPY dashboard/package*.json ./dashboard/
+RUN cd dashboard && npm install
+
+# Copy application code
+COPY . .
+
+# Install nodemon for hot-reload
+RUN npm install -g nodemon concurrently
+
+# Expose ports
+EXPOSE 3001 3002
+
+# Start both backend and dashboard with hot-reload
+CMD ["concurrently", "--kill-others", "\"nodemon --watch core core/index.js\"", "\"cd dashboard && npm run dev -- --host 0.0.0.0\""]
