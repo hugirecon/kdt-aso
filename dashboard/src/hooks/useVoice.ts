@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { Socket } from 'socket.io-client'
+import { apiFetch, API_URL } from '../utils/api'
 
 // Browser Speech Recognition types
 interface SpeechRecognitionEvent extends Event {
@@ -44,7 +45,7 @@ export function useVoice({ socket, onTranscription, onError }: UseVoiceOptions) 
   // Check if TTS is available on server, and if browser STT is available
   useEffect(() => {
     // Check server TTS (ElevenLabs)
-    fetch('/api/voice/status', { credentials: 'include' })
+    apiFetch('/api/voice/status')
       .then(res => res.json())
       .then(data => setVoiceAvailable(data.enabled))
       .catch(() => setVoiceAvailable(false))
@@ -116,7 +117,7 @@ export function useVoice({ socket, onTranscription, onError }: UseVoiceOptions) 
       audioRef.current.pause()
     }
 
-    const audio = new Audio(`http://localhost:3001${audioUrl}`)
+    const audio = new Audio(`${API_URL}${audioUrl}`)
     audioRef.current = audio
 
     audio.onplay = () => setIsPlaying(true)

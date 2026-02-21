@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Socket } from 'socket.io-client'
+import { apiFetch } from '../utils/api'
 
 interface Sensor {
   id: string
@@ -98,7 +99,7 @@ const SensorsPanel: React.FC<SensorsPanelProps> = ({ socket }) => {
 
   const fetchSensors = async () => {
     try {
-      const res = await fetch('/api/sensors', { credentials: 'include' })
+      const res = await apiFetch('/api/sensors', { credentials: 'include' })
       const data = await res.json()
       setSensors(data)
     } catch (err) {
@@ -108,7 +109,7 @@ const SensorsPanel: React.FC<SensorsPanelProps> = ({ socket }) => {
 
   const fetchCounts = async () => {
     try {
-      const res = await fetch('/api/sensors/counts', { credentials: 'include' })
+      const res = await apiFetch('/api/sensors/counts', { credentials: 'include' })
       const data = await res.json()
       setCounts(data)
     } catch (err) {

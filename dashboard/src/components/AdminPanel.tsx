@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { apiFetch } from '../utils/api'
 
 interface User {
   id: string
@@ -79,9 +80,9 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
     setLoading(true)
     try {
       const [usersRes, rolesRes, settingsRes] = await Promise.all([
-        fetch('/api/admin/users', { credentials: 'include' }),
-        fetch('/api/admin/roles', { credentials: 'include' }),
-        fetch('/api/admin/settings', { credentials: 'include' })
+        apiFetch('/api/admin/users', { credentials: 'include' }),
+        apiFetch('/api/admin/roles', { credentials: 'include' }),
+        apiFetch('/api/admin/settings', { credentials: 'include' })
       ])
 
       if (usersRes.ok) setUsers(await usersRes.json())
@@ -95,7 +96,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
 
   const loadAuditLogs = async () => {
     try {
-      const res = await fetch('/api/admin/audit?limit=100', { credentials: 'include' })
+      const res = await apiFetch('/api/admin/audit?limit=100', { credentials: 'include' })
       if (res.ok) setAuditLogs(await res.json())
     } catch (err) {
       console.error('Failed to load audit logs:', err)
@@ -111,7 +112,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
-      const res = await fetch('/api/admin/users', {
+      const res = await apiFetch('/api/admin/users', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -135,7 +136,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
     if (!editingUser) return
     
     try {
-      const res = await fetch(`/api/admin/users/${editingUser.id}`, {
+      const res = await apiFetch(`/api/admin/users/${editingUser.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -155,7 +156,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
     if (!confirm('Are you sure you want to delete this user?')) return
     
     try {
-      const res = await fetch(`/api/admin/users/${userId}`, {
+      const res = await apiFetch(`/api/admin/users/${userId}`, {
         method: 'DELETE',
         credentials: 'include'
       })
@@ -167,7 +168,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
 
   const handleSettingChange = async (category: string, key: string, value: any) => {
     try {
-      const res = await fetch(`/api/admin/settings/${category}`, {
+      const res = await apiFetch(`/api/admin/settings/${category}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

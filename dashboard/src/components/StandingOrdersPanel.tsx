@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Socket } from 'socket.io-client'
+import { apiFetch } from '../utils/api'
 
 interface StandingOrder {
   id: string
@@ -29,12 +30,12 @@ const StandingOrdersPanel: React.FC<StandingOrdersPanelProps> = ({ socket }) => 
 
   // Fetch orders on mount
   useEffect(() => {
-    fetch('/api/standing-orders', { credentials: 'include' })
+    apiFetch('/api/standing-orders')
       .then(res => res.json())
       .then(data => setOrders(data))
       .catch(err => console.error('Failed to fetch standing orders:', err))
 
-    fetch('/api/standing-orders/logs?limit=20', { credentials: 'include' })
+    apiFetch('/api/standing-orders/logs?limit=20')
       .then(res => res.json())
       .then(data => setLogs(data))
       .catch(err => console.error('Failed to fetch logs:', err))
@@ -73,10 +74,9 @@ const StandingOrdersPanel: React.FC<StandingOrdersPanelProps> = ({ socket }) => 
   const handleTrigger = async (trigger: string) => {
     setExecuting(trigger)
     try {
-      await fetch('/api/standing-orders/trigger', {
+      await apiFetch('/api/standing-orders/trigger', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify({ trigger, context: { manual: true } })
       })
     } catch (err) {

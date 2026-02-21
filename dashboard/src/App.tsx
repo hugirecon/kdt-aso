@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { io, Socket } from 'socket.io-client'
+import { apiFetch, API_URL } from './utils/api'
 import Login from './components/Login'
 import Header from './components/Header'
 import AgentPanel from './components/AgentPanel'
@@ -103,9 +104,7 @@ function App() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const response = await fetch('/api/auth/me', {
-          credentials: 'include'
-        })
+        const response = await apiFetch('/api/auth/me')
         if (response.ok) {
           const data = await response.json()
           setUser(data.user)
@@ -124,7 +123,7 @@ function App() {
   useEffect(() => {
     if (!authenticated) return
 
-    const newSocket = io('http://localhost:3001', {
+    const newSocket = io(API_URL, {
       withCredentials: true
     })
     
@@ -169,7 +168,7 @@ function App() {
     setSocket(newSocket)
 
     // Fetch initial agents
-    fetch('/api/agents', { credentials: 'include' })
+    apiFetch('/api/agents')
       .then(res => res.json())
       .then(data => setAgents(data))
       .catch(err => console.error('Failed to fetch agents:', err))
@@ -186,10 +185,7 @@ function App() {
   }
 
   const handleLogout = async () => {
-    await fetch('/api/auth/logout', { 
-      method: 'POST',
-      credentials: 'include'
-    })
+    await apiFetch('/api/auth/logout', { method: 'POST' })
     setAuthenticated(false)
     setUser(null)
     setToken(null)
