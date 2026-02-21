@@ -36,14 +36,14 @@ const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
-    origin: process.env.DASHBOARD_URL || "http://localhost:3002",
+    origin: true, // Allow all origins temporarily
     methods: ["GET", "POST"],
     credentials: true
   }
 });
 
 // Middleware
-app.use(cors({ origin: process.env.DASHBOARD_URL || "http://localhost:3002", credentials: true }));
+app.use(cors({ origin: true, credentials: true })); // Allow all origins temporarily
 app.use(express.json());
 app.use(cookieParser());
 
