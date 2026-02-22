@@ -21,7 +21,6 @@ RUN npm ci --only=production
 COPY core/ ./core/
 COPY agents/ ./agents/
 COPY config/ ./config/
-COPY docs/ ./docs/
 
 # Copy built dashboard
 COPY --from=dashboard-builder /app/dashboard/dist ./dashboard/dist
