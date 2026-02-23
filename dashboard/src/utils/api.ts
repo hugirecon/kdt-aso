@@ -1,7 +1,5 @@
 // API configuration for KDT Aso
-// Production: Render backend, Development: localhost
-export const API_URL = import.meta.env.VITE_API_URL || 
-  (import.meta.env.PROD ? 'https://kdt-aso.onrender.com' : 'http://localhost:3001')
+export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001'
 
 // Helper to build full API URLs
 export function apiUrl(path: string): string {
