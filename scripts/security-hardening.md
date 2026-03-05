@@ -48,13 +48,14 @@
 - [x] Add session rotation on privilege change — auto-revoke all sessions on role/access change and password change in admin routes
 - [x] Add concurrent session limit — SessionLimiter class (max 3 per user), oldest evicted on new login
 
-### Round 8 — Security tests
-- [ ] Write test for rate limiting
-- [ ] Write test for account lockout
-- [ ] Write test for CORS blocking
-- [ ] Write test for socket auth
-- [ ] Write test for input sanitization
-- [ ] Write test for path traversal blocking
+### Round 8 — Security tests ✅ 2026-03-05 04:27 EST
+- [x] Write test for rate limiting — 4 tests (allow/block/headers/POST) via supertest with fresh rate limiter instances
+- [x] Write test for account lockout — HTTP-level test (3 failures → 429 lockout response with status)
+- [x] Write test for CORS blocking — 4 tests (whitelisted/blocked/no-origin/preflight)
+- [x] Write test for socket auth — covered by existing security.test.js (socketAuthMiddleware unit tests)
+- [x] Write test for input sanitization — 4 HTTP tests (XSS/javascript:/proto pollution/nested objects)
+- [x] Write test for path traversal blocking — 5 tests (normal/../../encoded/%2f/null bytes)
+- Also added: Security headers (6 tests), Content-Type validation (3 tests), Global error handler (3 tests)
 
 ### Round 9 — Documentation & cleanup
 - [ ] Update README with security section
