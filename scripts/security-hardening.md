@@ -58,7 +58,7 @@
 - Also added: Security headers (6 tests), Content-Type validation (3 tests), Global error handler (3 tests)
 
 ### Round 9 — Documentation & cleanup
-- [ ] Update README with security section
+- [x] Update README with security section — comprehensive Security section added covering auth, rate limiting, input validation, headers, CORS, error handling, infra, monitoring, and testing (2026-03-05 04:57 EST)
 - [ ] Document all API endpoints
 - [ ] Create security policy document (SECURITY.md)
 
