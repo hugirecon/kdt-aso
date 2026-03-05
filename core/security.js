@@ -1,0 +1,711 @@
+/**
+ * KDT Aso - Security Middleware Module
+ * Centralized security hardening for the platform
+ * 
+ * Created: 2026-03-05
+ * Security Level: Production-grade
+ */
+
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+const crypto = require('crypto');
+
+// ============================================================
+// RATE LIMITING
+// ============================================================
+
+/**
+ * General API rate limiter - 100 requests per 15 minutes per IP
+ */
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests, try again later' },
+  validate: { xForwardedForHeader: false }
+});
+
+/**
+ * Auth-specific rate limiter - 5 attempts per 15 minutes per IP
+ * Prevents brute force on login
+ */
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many login attempts. Account temporarily locked. Try again in 15 minutes.' },
+  skipSuccessfulRequests: true,
+  validate: { xForwardedForHeader: false }
+});
+
+/**
+ * Sensitive operations rate limiter - 10 per hour
+ * For admin actions, encryption, backups, etc.
+ */
+const sensitiveOpLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Rate limit exceeded for sensitive operations' }
+});
+
+// ============================================================
+// SECURITY HEADERS (Helmet)
+// ============================================================
+
+const securityHeaders = helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],  // Dashboard needs inline scripts
+      styleSrc: ["'self'", "'unsafe-inline'", "https://unpkg.com"],  // Leaflet CSS
+      imgSrc: ["'self'", "data:", "https://*.tile.openstreetmap.org", "https://unpkg.com"],
+      connectSrc: ["'self'", "ws://localhost:*", "wss://localhost:*"],
+      fontSrc: ["'self'"],
+      objectSrc: ["'none'"],
+      mediaSrc: ["'self'"],
+      frameSrc: ["'none'"],
+      baseUri: ["'self'"],
+      formAction: ["'self'"],
+      frameAncestors: ["'none'"],
+      upgradeInsecureRequests: []
+    }
+  },
+  crossOriginEmbedderPolicy: false,  // Allow Leaflet tiles
+  crossOriginOpenerPolicy: { policy: 'same-origin' },
+  crossOriginResourcePolicy: { policy: 'same-site' },
+  dnsPrefetchControl: { allow: false },
+  frameguard: { action: 'deny' },
+  hidePoweredBy: true,
+  hsts: { maxAge: 31536000, includeSubDomains: true, preload: true },
+  ieNoOpen: true,
+  noSniff: true,
+  originAgentCluster: true,
+  permittedCrossDomainPolicies: { permittedPolicies: 'none' },
+  referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+  xssFilter: true
+});
+
+// ============================================================
+// INPUT SANITIZATION
+// ============================================================
+
+/**
+ * Sanitize string input - strip potential XSS vectors
+ */
+function sanitizeString(str) {
+  if (typeof str !== 'string') return str;
+  return str
+    .replace(/[<>]/g, '')           // Remove angle brackets
+    .replace(/javascript:/gi, '')    // Remove javascript: protocol
+    .replace(/on\w+\s*=/gi, '')     // Remove event handlers
+    .replace(/data:/gi, '')          // Remove data: protocol
+    .trim();
+}
+
+/**
+ * Deep sanitize an object's string values
+ */
+function sanitizeObject(obj) {
+  if (typeof obj === 'string') return sanitizeString(obj);
+  if (typeof obj !== 'object' || obj === null) return obj;
+  if (Array.isArray(obj)) return obj.map(sanitizeObject);
+  
+  const cleaned = {};
+  for (const [key, value] of Object.entries(obj)) {
+    // Block prototype pollution
+    if (key === '__proto__' || key === 'constructor' || key === 'prototype') continue;
+    cleaned[sanitizeString(key)] = sanitizeObject(value);
+  }
+  return cleaned;
+}
+
+/**
+ * Input sanitization middleware
+ */
+function inputSanitizer(req, res, next) {
+  if (req.body && typeof req.body === 'object') {
+    req.body = sanitizeObject(req.body);
+  }
+  if (req.query && typeof req.query === 'object') {
+    req.query = sanitizeObject(req.query);
+  }
+  if (req.params && typeof req.params === 'object') {
+    req.params = sanitizeObject(req.params);
+  }
+  next();
+}
+
+// ============================================================
+// REQUEST VALIDATION
+// ============================================================
+
+/**
+ * Validate request body size (prevent DoS via large payloads)
+ * Applied via express.json({ limit: '1mb' }) in main app
+ */
+const MAX_BODY_SIZE = '1mb';
+
+/**
+ * Validate that required fields exist in request body
+ */
+function requireFields(...fields) {
+  return (req, res, next) => {
+    const missing = fields.filter(f => req.body[f] === undefined || req.body[f] === null);
+    if (missing.length > 0) {
+      return res.status(400).json({ 
+        error: `Missing required fields: ${missing.join(', ')}` 
+      });
+    }
+    next();
+  };
+}
+
+// ============================================================
+// ACCOUNT LOCKOUT
+// ============================================================
+
+class AccountLockout {
+  constructor(options = {}) {
+    this.maxAttempts = options.maxAttempts || 5;
+    this.lockoutDuration = options.lockoutDuration || 15 * 60 * 1000; // 15 min
+    this.attempts = new Map();  // ip/username -> { count, firstAttempt, lockedUntil }
+  }
+
+  /**
+   * Check if an account/IP is locked out
+   */
+  isLocked(key) {
+    const record = this.attempts.get(key);
+    if (!record) return false;
+    
+    if (record.lockedUntil && Date.now() < record.lockedUntil) {
+      return true;
+    }
+    
+    // Lockout expired, reset
+    if (record.lockedUntil && Date.now() >= record.lockedUntil) {
+      this.attempts.delete(key);
+      return false;
+    }
+    
+    return false;
+  }
+
+  /**
+   * Record a failed attempt
+   */
+  recordFailure(key) {
+    const record = this.attempts.get(key) || { count: 0, firstAttempt: Date.now() };
+    record.count++;
+    
+    if (record.count >= this.maxAttempts) {
+      record.lockedUntil = Date.now() + this.lockoutDuration;
+      console.warn(`[SECURITY] Account lockout triggered for: ${key} (${record.count} failed attempts)`);
+    }
+    
+    this.attempts.set(key, record);
+    return record;
+  }
+
+  /**
+   * Clear attempts on successful login
+   */
+  recordSuccess(key) {
+    this.attempts.delete(key);
+  }
+
+  /**
+   * Get lockout status
+   */
+  getStatus(key) {
+    const record = this.attempts.get(key);
+    if (!record) return { locked: false, attempts: 0 };
+    
+    return {
+      locked: this.isLocked(key),
+      attempts: record.count,
+      remainingAttempts: Math.max(0, this.maxAttempts - record.count),
+      lockedUntil: record.lockedUntil ? new Date(record.lockedUntil).toISOString() : null
+    };
+  }
+
+  /**
+   * Cleanup expired entries (run periodically)
+   */
+  cleanup() {
+    const now = Date.now();
+    for (const [key, record] of this.attempts.entries()) {
+      if (record.lockedUntil && now >= record.lockedUntil) {
+        this.attempts.delete(key);
+      }
+      // Also clean old non-locked entries (older than 1 hour)
+      if (!record.lockedUntil && (now - record.firstAttempt) > 60 * 60 * 1000) {
+        this.attempts.delete(key);
+      }
+    }
+  }
+}
+
+// ============================================================
+// SECURITY AUDIT LOGGER
+// ============================================================
+
+class SecurityAuditLog {
+  constructor() {
+    this.events = [];
+    this.maxEvents = 10000;
+  }
+
+  log(event) {
+    const entry = {
+      timestamp: new Date().toISOString(),
+      ...event
+    };
+    
+    this.events.push(entry);
+    
+    // Trim if over max
+    if (this.events.length > this.maxEvents) {
+      this.events = this.events.slice(-this.maxEvents);
+    }
+
+    // Log critical events to console
+    if (event.severity === 'critical' || event.severity === 'high') {
+      console.warn(`[SECURITY AUDIT] ${event.severity.toUpperCase()}: ${event.action} - ${event.detail || ''}`);
+    }
+
+    return entry;
+  }
+
+  logAuth(action, detail, ip, userId = null, success = true) {
+    return this.log({
+      category: 'auth',
+      action,
+      detail,
+      ip,
+      userId,
+      success,
+      severity: success ? 'info' : 'warning'
+    });
+  }
+
+  logAccess(action, resource, ip, userId, method) {
+    return this.log({
+      category: 'access',
+      action,
+      resource,
+      ip,
+      userId,
+      method,
+      severity: 'info'
+    });
+  }
+
+  logSecurity(action, detail, ip, severity = 'warning') {
+    return this.log({
+      category: 'security',
+      action,
+      detail,
+      ip,
+      severity
+    });
+  }
+
+  getRecent(limit = 100, filters = {}) {
+    let results = [...this.events].reverse();
+    
+    if (filters.category) {
+      results = results.filter(e => e.category === filters.category);
+    }
+    if (filters.severity) {
+      results = results.filter(e => e.severity === filters.severity);
+    }
+    if (filters.userId) {
+      results = results.filter(e => e.userId === filters.userId);
+    }
+    if (filters.action) {
+      results = results.filter(e => e.action === filters.action);
+    }
+    
+    return results.slice(0, limit);
+  }
+}
+
+// ============================================================
+// CORS CONFIGURATION (Locked Down)
+// ============================================================
+
+/**
+ * Generate strict CORS options
+ * Only allows the dashboard origin and localhost variants
+ */
+function getCorsOptions(allowedOrigins = []) {
+  const defaultOrigins = [
+    'http://localhost:3001',
+    'http://localhost:3002',
+    'http://127.0.0.1:3001',
+    'http://127.0.0.1:3002'
+  ];
+
+  const origins = [...new Set([...defaultOrigins, ...allowedOrigins])];
+
+  return {
+    origin: (origin, callback) => {
+      // Allow requests with no origin (server-to-server, curl, etc.)
+      if (!origin) return callback(null, true);
+      
+      if (origins.includes(origin)) {
+        callback(null, true);
+      } else {
+        console.warn(`[SECURITY] CORS blocked origin: ${origin}`);
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,
+    maxAge: 600  // Cache preflight for 10 minutes
+  };
+}
+
+// ============================================================
+// SOCKET.IO AUTHENTICATION
+// ============================================================
+
+/**
+ * Socket.io authentication middleware
+ * Verifies JWT token before allowing WebSocket connection
+ */
+function socketAuthMiddleware(authManager) {
+  return (socket, next) => {
+    const token = socket.handshake.auth?.token || 
+                  socket.handshake.headers?.authorization?.replace('Bearer ', '') ||
+                  parseCookie(socket.handshake.headers?.cookie, 'token');
+
+    if (!token) {
+      console.warn(`[SECURITY] Socket connection rejected: no token (${socket.handshake.address})`);
+      return next(new Error('Authentication required'));
+    }
+
+    const result = authManager.verifyToken(token);
+    if (!result.valid) {
+      console.warn(`[SECURITY] Socket connection rejected: invalid token (${socket.handshake.address})`);
+      return next(new Error('Invalid authentication'));
+    }
+
+    socket.user = result.user;
+    next();
+  };
+}
+
+/**
+ * Parse a specific cookie from cookie header string
+ */
+function parseCookie(cookieHeader, name) {
+  if (!cookieHeader) return null;
+  const match = cookieHeader.match(new RegExp(`(?:^|;)\\s*${name}=([^;]*)`));
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
+// ============================================================
+// API KEY SYSTEM (for future property/agent instances)
+// ============================================================
+
+class ApiKeyManager {
+  constructor() {
+    this.keys = new Map();  // key -> { propertyId, agentId, permissions, createdAt, lastUsed }
+  }
+
+  /**
+   * Generate a new API key for a property/agent instance
+   */
+  generate(propertyId, agentId, permissions = ['read', 'write']) {
+    const key = `kdt_${crypto.randomBytes(32).toString('hex')}`;
+    const record = {
+      propertyId,
+      agentId,
+      permissions,
+      createdAt: new Date().toISOString(),
+      lastUsed: null,
+      active: true
+    };
+    this.keys.set(key, record);
+    return { key, ...record };
+  }
+
+  /**
+   * Validate an API key
+   */
+  validate(key) {
+    const record = this.keys.get(key);
+    if (!record || !record.active) return null;
+    
+    record.lastUsed = new Date().toISOString();
+    return record;
+  }
+
+  /**
+   * Revoke an API key
+   */
+  revoke(key) {
+    const record = this.keys.get(key);
+    if (record) {
+      record.active = false;
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * List all keys for a property
+   */
+  listForProperty(propertyId) {
+    const results = [];
+    for (const [key, record] of this.keys.entries()) {
+      if (record.propertyId === propertyId) {
+        results.push({ 
+          key: key.substring(0, 8) + '...',  // Mask key
+          ...record 
+        });
+      }
+    }
+    return results;
+  }
+}
+
+// ============================================================
+// REQUEST LOGGING MIDDLEWARE
+// ============================================================
+
+function requestLogger(auditLog) {
+  return (req, res, next) => {
+    const start = Date.now();
+    
+    // Log on response finish
+    res.on('finish', () => {
+      const duration = Date.now() - start;
+      const logData = {
+        method: req.method,
+        path: req.path,
+        statusCode: res.statusCode,
+        duration: `${duration}ms`,
+        ip: req.ip,
+        userId: req.user?.id || null,
+        userAgent: req.headers['user-agent']?.substring(0, 100)
+      };
+
+      // Log security-relevant requests
+      if (req.path.includes('/auth/') || req.path.includes('/admin/') || 
+          req.path.includes('/encryption/') || req.path.includes('/backup')) {
+        auditLog.logAccess(
+          `${req.method} ${req.path}`,
+          req.path,
+          req.ip,
+          req.user?.id,
+          req.method
+        );
+      }
+
+      // Log failed requests
+      if (res.statusCode >= 400) {
+        auditLog.logSecurity(
+          `HTTP ${res.statusCode}`,
+          `${req.method} ${req.path}`,
+          req.ip,
+          res.statusCode >= 500 ? 'high' : 'warning'
+        );
+      }
+    });
+
+    next();
+  };
+}
+
+// ============================================================
+// IP ALLOWLIST (for production deployments)
+// ============================================================
+
+class IpAllowlist {
+  constructor(options = {}) {
+    this.enabled = options.enabled || false;
+    this.allowedIps = new Set(options.allowedIps || ['127.0.0.1', '::1', '::ffff:127.0.0.1']);
+    this.allowedSubnets = options.allowedSubnets || [];  // e.g. '192.168.1.0/24'
+  }
+
+  /**
+   * Check if an IP is allowed
+   */
+  isAllowed(ip) {
+    if (!this.enabled) return true;
+    if (this.allowedIps.has(ip)) return true;
+    
+    // Check subnets
+    for (const subnet of this.allowedSubnets) {
+      if (this.ipInSubnet(ip, subnet)) return true;
+    }
+    
+    return false;
+  }
+
+  /**
+   * Basic subnet check (supports /24, /16, /8)
+   */
+  ipInSubnet(ip, subnet) {
+    const [subnetIp, bits] = subnet.split('/');
+    const mask = parseInt(bits);
+    
+    const ipParts = ip.replace('::ffff:', '').split('.').map(Number);
+    const subnetParts = subnetIp.split('.').map(Number);
+    
+    if (ipParts.length !== 4 || subnetParts.length !== 4) return false;
+    
+    const ipNum = (ipParts[0] << 24) | (ipParts[1] << 16) | (ipParts[2] << 8) | ipParts[3];
+    const subnetNum = (subnetParts[0] << 24) | (subnetParts[1] << 16) | (subnetParts[2] << 8) | subnetParts[3];
+    const maskNum = ~(0xFFFFFFFF >>> mask);
+    
+    return (ipNum & maskNum) === (subnetNum & maskNum);
+  }
+
+  /**
+   * Middleware to enforce IP allowlist
+   */
+  middleware() {
+    return (req, res, next) => {
+      if (!this.isAllowed(req.ip)) {
+        console.warn(`[SECURITY] IP blocked: ${req.ip}`);
+        return res.status(403).json({ error: 'Access denied' });
+      }
+      next();
+    };
+  }
+
+  addIp(ip) { this.allowedIps.add(ip); }
+  removeIp(ip) { this.allowedIps.delete(ip); }
+  enable() { this.enabled = true; }
+  disable() { this.enabled = false; }
+}
+
+// ============================================================
+// PATH TRAVERSAL PROTECTION
+// ============================================================
+
+/**
+ * Validate that a path parameter doesn't contain traversal attempts
+ */
+function pathTraversalGuard(paramNames = ['id']) {
+  return (req, res, next) => {
+    for (const param of paramNames) {
+      const value = req.params[param] || req.query[param];
+      if (value && (
+        value.includes('..') || 
+        value.includes('/') || 
+        value.includes('\\') ||
+        value.includes('\0') ||
+        value.includes('%2e') ||
+        value.includes('%2f') ||
+        value.includes('%5c')
+      )) {
+        console.warn(`[SECURITY] Path traversal attempt blocked: ${param}=${value} from ${req.ip}`);
+        return res.status(400).json({ error: 'Invalid parameter' });
+      }
+    }
+    next();
+  };
+}
+
+// ============================================================
+// GLOBAL ERROR HANDLER
+// ============================================================
+
+/**
+ * Global error handler — never leak stack traces in production
+ */
+function globalErrorHandler(err, req, res, _next) {
+  // Log the full error internally
+  console.error(`[ERROR] ${req.method} ${req.path}:`, err);
+
+  // CORS errors
+  if (err.message === 'Not allowed by CORS') {
+    return res.status(403).json({ error: 'Origin not allowed' });
+  }
+
+  // JSON parse errors
+  if (err.type === 'entity.parse.failed') {
+    return res.status(400).json({ error: 'Invalid JSON' });
+  }
+
+  // Payload too large
+  if (err.type === 'entity.too.large') {
+    return res.status(413).json({ error: 'Request body too large' });
+  }
+
+  // Don't leak stack traces in production
+  const isDev = process.env.NODE_ENV !== 'production';
+  res.status(err.status || 500).json({
+    error: isDev ? err.message : 'Internal server error'
+  });
+}
+
+/**
+ * Setup process-level error handlers
+ */
+function setupProcessHandlers() {
+  process.on('uncaughtException', (err) => {
+    console.error('[FATAL] Uncaught exception:', err);
+    // Give time to flush logs, then exit
+    setTimeout(() => process.exit(1), 1000);
+  });
+
+  process.on('unhandledRejection', (reason) => {
+    console.error('[FATAL] Unhandled rejection:', reason);
+  });
+
+  // Graceful shutdown
+  const shutdown = (signal) => {
+    console.log(`[SHUTDOWN] Received ${signal}, shutting down gracefully...`);
+    setTimeout(() => {
+      console.log('[SHUTDOWN] Forcing exit');
+      process.exit(0);
+    }, 5000);
+  };
+
+  process.on('SIGTERM', () => shutdown('SIGTERM'));
+  process.on('SIGINT', () => shutdown('SIGINT'));
+}
+
+// ============================================================
+// EXPORTS
+// ============================================================
+
+module.exports = {
+  // Middleware
+  securityHeaders,
+  apiLimiter,
+  authLimiter,
+  sensitiveOpLimiter,
+  inputSanitizer,
+  requestLogger,
+  socketAuthMiddleware,
+  getCorsOptions,
+  pathTraversalGuard,
+  globalErrorHandler,
+  setupProcessHandlers,
+  
+  // Classes
+  AccountLockout,
+  SecurityAuditLog,
+  ApiKeyManager,
+  IpAllowlist,
+  
+  // Utilities
+  sanitizeString,
+  sanitizeObject,
+  requireFields,
+  
+  // Constants
+  MAX_BODY_SIZE
+};

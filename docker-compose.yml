@@ -11,6 +11,8 @@ services:
       dockerfile: Dockerfile
     container_name: kdt-aso
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
     ports:
       - "${PORT:-3001}:3001"
     environment:
@@ -18,7 +20,13 @@ services:
       - PORT=3001
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
       - ELEVENLABS_API_KEY=${ELEVENLABS_API_KEY:-}
-      - JWT_SECRET=${JWT_SECRET:-kdt-aso-production-secret-change-me}
+      - JWT_SECRET=${JWT_SECRET}
+      - CORS_ORIGINS=${CORS_ORIGINS:-}
+      - IP_ALLOWLIST_ENABLED=${IP_ALLOWLIST_ENABLED:-false}
+      - ALLOWED_IPS=${ALLOWED_IPS:-}
+      - TRUST_PROXY=${TRUST_PROXY:-true}
+      - PROPERTY_ID=${PROPERTY_ID:-}
+      - AGENT_INSTANCE_ID=${AGENT_INSTANCE_ID:-}
       - DASHBOARD_URL=${DASHBOARD_URL:-http://localhost:3001}
     volumes:
       - ./logs:/app/logs

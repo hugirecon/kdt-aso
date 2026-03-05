@@ -1,5 +1,43 @@
+# Dependencies
 node_modules/
+dashboard/node_modules/
+
+# Environment (NEVER commit secrets)
 .env
-*.log
+.env.local
+.env.production
+
+# Encryption keys (auto-generated per instance)
+config/keys/
+
+# Build output
 dist/
+dashboard/dist/
+
+# Logs
+*.log
+logs/
+
+# OS files
 .DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+
+# Runtime
+*.pid
+*.seed
+
+# Backups (may contain sensitive data)
+backups/*.tar.gz
+
+# Memory files (per-instance)
+memory/*.json
+
+# Documents (per-instance data)
+documents/*.json
+
+# Screenshots (dev artifacts)
+screenshots/

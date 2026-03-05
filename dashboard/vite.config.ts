@@ -4,9 +4,9 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   define: {
-    // Production API URL - localtunnel to Mac mini backend
+    // API URL - defaults to localhost for local development
     'import.meta.env.VITE_API_URL': JSON.stringify(
-      process.env.VITE_API_URL || 'https://221f36bafe0202aa-98-97-87-235.serveousercontent.com'
+      process.env.VITE_API_URL || 'http://localhost:3001'
     )
   },
   server: {

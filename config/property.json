@@ -1,0 +1,28 @@
+{
+  "_comment": "Property/Agent Instance Configuration — for multi-instance Mac mini deployments",
+  "property": {
+    "id": null,
+    "name": null,
+    "location": null,
+    "type": "standalone",
+    "notes": "Set these values when deploying to a specific property"
+  },
+  "agent": {
+    "instanceId": null,
+    "role": "primary",
+    "capabilities": ["hero", "operations", "surveillance", "geospatial", "communications", "logistics", "admin"],
+    "notes": "Each Mac mini runs one agent instance. Set instanceId to match the property."
+  },
+  "network": {
+    "centralServer": null,
+    "registrationEndpoint": "/api/properties/register",
+    "heartbeatEndpoint": "/api/properties/heartbeat",
+    "heartbeatIntervalMs": 30000,
+    "notes": "Central server for property coordination. Set when deploying fleet."
+  },
+  "deployment": {
+    "mode": "demo",
+    "allowedModes": ["demo", "single-property", "fleet"],
+    "notes": "demo = current standalone mode. single-property = one property, one agent. fleet = multiple properties reporting to central."
+  }
+}

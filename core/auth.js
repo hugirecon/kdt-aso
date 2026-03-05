@@ -8,9 +8,22 @@ const jwt = require('jsonwebtoken');
 const fs = require('fs');
 const path = require('path');
 
-// Secret key for JWT (in production, use environment variable)
-const JWT_SECRET = process.env.JWT_SECRET || 'kdt-aso-secret-key-change-in-production';
-const JWT_EXPIRY = '24h';
+// JWT Secret — MUST be set via environment variable in production
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET || JWT_SECRET === 'kdt-aso-production-secret-change-me') {
+  console.error('╔══════════════════════════════════════════════════════════╗');
+  console.error('║  CRITICAL: JWT_SECRET not set or using default value!   ║');
+  console.error('║  Generate one: node -e "console.log(require(\'crypto\')   ║');
+  console.error('║    .randomBytes(64).toString(\'hex\'))"                   ║');
+  console.error('║  Set it in .env file as JWT_SECRET=<your-key>           ║');
+  console.error('╚══════════════════════════════════════════════════════════╝');
+  // In production, refuse to start without a proper secret
+  if (process.env.NODE_ENV === 'production') {
+    process.exit(1);
+  }
+}
+const BCRYPT_ROUNDS = 12;  // Increased from 10
+const JWT_EXPIRY = '8h';   // Reduced from 24h
 
 class AuthManager {
   constructor() {
@@ -31,7 +44,7 @@ class AuthManager {
         {
           id: 'admin',
           username: 'admin',
-          passwordHash: bcrypt.hashSync('admin', 10), // Change immediately in production
+          passwordHash: bcrypt.hashSync('admin', BCRYPT_ROUNDS), // Change immediately in production
           name: 'Administrator',
           title: 'System Administrator',
           role: 'admin',
@@ -136,7 +149,7 @@ class AuthManager {
     const newUser = {
       id: `user-${Date.now()}`,
       username: userData.username,
-      passwordHash: await bcrypt.hash(userData.password, 10),
+      passwordHash: await bcrypt.hash(userData.password, BCRYPT_ROUNDS),
       name: userData.name || userData.username,
       title: userData.title || 'Operator',
       role: userData.role || 'operator',
@@ -173,7 +186,7 @@ class AuthManager {
       return { success: false, error: 'Invalid current password' };
     }
 
-    user.passwordHash = await bcrypt.hash(newPassword, 10);
+    user.passwordHash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
     this.saveUsers();
 
     return { success: true };

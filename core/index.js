@@ -25,6 +25,27 @@ const PersistentMemory = require('./persistent-memory');
 const DocumentStorage = require('./documents');
 const BackupSystem = require('./backup');
 const EncryptionSystem = require('./encryption');
+const {
+  securityHeaders,
+  apiLimiter,
+  authLimiter,
+  sensitiveOpLimiter,
+  inputSanitizer,
+  requestLogger,
+  socketAuthMiddleware,
+  getCorsOptions,
+  pathTraversalGuard,
+  globalErrorHandler,
+  setupProcessHandlers,
+  AccountLockout,
+  SecurityAuditLog,
+  ApiKeyManager,
+  IpAllowlist,
+  MAX_BODY_SIZE
+} = require('./security');
+
+// Setup process-level error handlers
+setupProcessHandlers();
 
 const languageSupport = new LanguageSupport();
 const persistentMemory = new PersistentMemory('./memory');
@@ -32,20 +53,60 @@ const documentStorage = new DocumentStorage('./documents');
 const backupSystem = new BackupSystem({ backupDir: './backups', dataDir: '.' });
 const encryptionSystem = new EncryptionSystem({ keyDir: './config/keys' });
 
+// Security systems
+const securityAudit = new SecurityAuditLog();
+const accountLockout = new AccountLockout({ maxAttempts: 5, lockoutDuration: 15 * 60 * 1000 });
+const apiKeyManager = new ApiKeyManager();
+const ipAllowlist = new IpAllowlist({ 
+  enabled: process.env.IP_ALLOWLIST_ENABLED === 'true',
+  allowedIps: process.env.ALLOWED_IPS ? process.env.ALLOWED_IPS.split(',') : ['127.0.0.1', '::1', '::ffff:127.0.0.1']
+});
+
+// Parse allowed CORS origins from env or use defaults
+const corsOrigins = process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',') : [];
+const corsOptions = getCorsOptions(corsOrigins);
+
 const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
-  cors: {
-    origin: true, // Allow all origins temporarily
-    methods: ["GET", "POST"],
-    credentials: true
-  }
+  cors: corsOptions,
+  pingTimeout: 30000,
+  pingInterval: 25000,
+  maxHttpBufferSize: 1e6  // 1MB max WebSocket message
 });
 
-// Middleware
-app.use(cors({ origin: true, credentials: true })); // Allow all origins temporarily
-app.use(express.json());
+// ============================================================
+// SECURITY MIDDLEWARE STACK (order matters)
+// ============================================================
+
+// 1. Security headers (helmet)
+app.use(securityHeaders);
+
+// 2. IP allowlist (if enabled)
+app.use(ipAllowlist.middleware());
+
+// 3. CORS (locked down)
+app.use(cors(corsOptions));
+
+// 4. Body parsing with size limits
+app.use(express.json({ limit: MAX_BODY_SIZE }));
+app.use(express.urlencoded({ extended: false, limit: MAX_BODY_SIZE }));
 app.use(cookieParser());
+
+// 5. Input sanitization
+app.use(inputSanitizer);
+
+// 6. Request logging
+app.use(requestLogger(securityAudit));
+
+// 7. General API rate limiting
+app.use('/api', apiLimiter);
+
+// 8. Trust proxy (if behind reverse proxy/nginx)
+app.set('trust proxy', process.env.TRUST_PROXY === 'true' ? 1 : false);
+
+// Cleanup lockout entries periodically
+setInterval(() => accountLockout.cleanup(), 5 * 60 * 1000);
 
 // Initialize core systems
 const agentRouter = new AgentRouter();
@@ -164,24 +225,57 @@ alertSystem.on('alert:escalated', (alert) => {
 // Serve audio files
 app.use('/audio', express.static(path.join(__dirname, '..', 'audio')));
 
-// Auth routes (before auth middleware)
-app.post('/api/auth/login', async (req, res) => {
+// Serve dashboard static files
+app.use(express.static(path.join(__dirname, '..', 'dashboard', 'dist')));
+
+// Auth routes (before auth middleware) — rate limited separately
+app.post('/api/auth/login', authLimiter, async (req, res) => {
   const { username, password } = req.body;
+  
+  if (!username || !password) {
+    return res.status(400).json({ error: 'Username and password required' });
+  }
+
+  // Check account lockout (by IP and by username)
+  const ipKey = `ip:${req.ip}`;
+  const userKey = `user:${username}`;
+  
+  if (accountLockout.isLocked(ipKey) || accountLockout.isLocked(userKey)) {
+    securityAudit.logAuth('login_blocked', `Locked out: ${username}`, req.ip, null, false);
+    return res.status(429).json({ 
+      error: 'Account temporarily locked due to too many failed attempts. Try again later.',
+      ...accountLockout.getStatus(userKey)
+    });
+  }
+
   const result = await authManager.authenticate(username, password);
   
   if (result.success) {
+    // Clear lockout on success
+    accountLockout.recordSuccess(ipKey);
+    accountLockout.recordSuccess(userKey);
+    securityAudit.logAuth('login_success', `User: ${username}`, req.ip, result.user.id, true);
+    
     res.cookie('token', result.token, { 
-      httpOnly: true, 
+      httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      maxAge: 24 * 60 * 60 * 1000 // 24 hours
+      sameSite: 'strict',
+      maxAge: 8 * 60 * 60 * 1000,  // 8 hours (reduced from 24)
+      path: '/'
     });
+  } else {
+    // Record failed attempt
+    accountLockout.recordFailure(ipKey);
+    accountLockout.recordFailure(userKey);
+    securityAudit.logAuth('login_failed', `User: ${username}`, req.ip, null, false);
   }
   
   res.json(result);
 });
 
 app.post('/api/auth/logout', (req, res) => {
-  res.clearCookie('token');
+  securityAudit.logAuth('logout', 'User logged out', req.ip, req.user?.id);
+  res.clearCookie('token', { path: '/' });
   res.json({ success: true });
 });
 
@@ -189,27 +283,28 @@ app.get('/api/auth/me', authMiddleware(authManager), (req, res) => {
   res.json({ user: req.user });
 });
 
-// Apply auth middleware to protected routes
+// Apply auth middleware to all protected API routes
 app.use('/api', authMiddleware(authManager));
 
-// Health check endpoint (for Docker/load balancers)
+// Health check endpoint (for Docker/load balancers) — minimal info
 app.get('/api/health', (req, res) => {
-  res.json({
-    status: 'ok',
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime()
-  });
+  res.json({ status: 'ok' });
 });
 
-// API Routes
+// API Routes — requires auth (detailed info only for authenticated users)
 app.get('/api/status', (req, res) => {
-  res.json({
-    system: 'KDT Aso',
-    version: '0.1.0',
-    status: 'operational',
-    agents: agentRouter.getAgentStatus(),
-    standingOrders: standingOrders.getActiveCount()
-  });
+  // Only expose detailed status to authenticated users
+  if (req.user) {
+    res.json({
+      system: 'KDT Aso',
+      version: '0.1.0',
+      status: 'operational',
+      agents: agentRouter.getAgentStatus(),
+      standingOrders: standingOrders.getActiveCount()
+    });
+  } else {
+    res.json({ status: 'operational' });
+  }
 });
 
 app.post('/api/message', async (req, res) => {
@@ -536,11 +631,20 @@ app.post('/api/voice/speak', async (req, res) => {
   }
 });
 
+// WebSocket authentication
+io.use(socketAuthMiddleware(authManager));
+
 // WebSocket for real-time updates
 io.on('connection', (socket) => {
-  console.log('Dashboard connected:', socket.id);
+  console.log(`Dashboard connected: ${socket.id} (user: ${socket.user?.username})`);
+  securityAudit.logAuth('socket_connect', `User: ${socket.user?.username}`, socket.handshake.address, socket.user?.id);
   
   socket.on('operator:identify', (operatorId) => {
+    // Validate operator ID matches authenticated user
+    if (operatorId !== socket.user?.id && socket.user?.role !== 'admin') {
+      socket.emit('error', { message: 'Cannot identify as another operator' });
+      return;
+    }
     socket.operatorId = operatorId;
     socket.join(`operator:${operatorId}`);
   });
@@ -658,7 +762,7 @@ app.get('/api/memory/stats', (req, res) => {
   persistentMemory.getStats().then(stats => res.json(stats)).catch(err => res.status(500).json({ error: err.message }));
 });
 
-app.get('/api/memory/agent/:agentId', async (req, res) => {
+app.get('/api/memory/agent/:agentId', pathTraversalGuard(['agentId']), async (req, res) => {
   try {
     const memory = await persistentMemory.loadAgentMemory(req.params.agentId);
     res.json(memory);
@@ -667,7 +771,7 @@ app.get('/api/memory/agent/:agentId', async (req, res) => {
   }
 });
 
-app.post('/api/memory/agent/:agentId/fact', async (req, res) => {
+app.post('/api/memory/agent/:agentId/fact', pathTraversalGuard(['agentId']), async (req, res) => {
   try {
     const { fact, category } = req.body;
     const memory = await persistentMemory.addAgentFact(req.params.agentId, fact, category);
@@ -700,7 +804,7 @@ app.get('/api/documents/stats', (req, res) => {
   res.json(documentStorage.getStats());
 });
 
-app.get('/api/documents/:id', async (req, res) => {
+app.get('/api/documents/:id', pathTraversalGuard(['id']), async (req, res) => {
   try {
     const doc = await documentStorage.get(req.params.id);
     if (!doc) return res.status(404).json({ error: 'Document not found' });
@@ -719,7 +823,7 @@ app.post('/api/documents', async (req, res) => {
   }
 });
 
-app.put('/api/documents/:id', async (req, res) => {
+app.put('/api/documents/:id', pathTraversalGuard(['id']), async (req, res) => {
   try {
     const doc = await documentStorage.update(req.params.id, req.body);
     res.json(doc);
@@ -728,7 +832,7 @@ app.put('/api/documents/:id', async (req, res) => {
   }
 });
 
-app.delete('/api/documents/:id', async (req, res) => {
+app.delete('/api/documents/:id', pathTraversalGuard(['id']), async (req, res) => {
   try {
     await documentStorage.delete(req.params.id);
     res.json({ success: true });
@@ -765,9 +869,10 @@ app.get('/api/backups', async (req, res) => {
   }
 });
 
-app.post('/api/backups', async (req, res) => {
+app.post('/api/backups', sensitiveOpLimiter, async (req, res) => {
   try {
     const backup = await backupSystem.createBackup(req.body);
+    securityAudit.logAccess('backup_create', '/api/backups', req.ip, req.user?.id, 'POST');
     res.json(backup);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -783,8 +888,9 @@ app.get('/api/backups/:id', async (req, res) => {
   }
 });
 
-app.post('/api/backups/:id/restore', async (req, res) => {
+app.post('/api/backups/:id/restore', sensitiveOpLimiter, async (req, res) => {
   try {
+    securityAudit.logAccess('backup_restore', `/api/backups/${req.params.id}/restore`, req.ip, req.user?.id, 'POST');
     const result = await backupSystem.restore(req.params.id, req.body);
     res.json(result);
   } catch (err) {
@@ -801,18 +907,19 @@ app.delete('/api/backups/:id', async (req, res) => {
   }
 });
 
-// Encryption API Routes
-app.get('/api/encryption/status', (req, res) => {
+// Encryption API Routes (admin only, rate limited)
+app.get('/api/encryption/status', authMiddleware(authManager), adminAuth, (req, res) => {
   res.json(encryptionSystem.getStatus());
 });
 
-app.post('/api/encryption/session', (req, res) => {
+app.post('/api/encryption/session', authMiddleware(authManager), adminAuth, sensitiveOpLimiter, (req, res) => {
   const { userId } = req.body;
   const sessionId = encryptionSystem.generateSessionKey(userId);
+  securityAudit.logAccess('encryption_session_create', '/api/encryption/session', req.ip, req.user?.id, 'POST');
   res.json({ sessionId });
 });
 
-app.post('/api/encryption/encrypt', (req, res) => {
+app.post('/api/encryption/encrypt', authMiddleware(authManager), adminAuth, sensitiveOpLimiter, (req, res) => {
   try {
     const { data, sessionId } = req.body;
     const key = sessionId ? encryptionSystem.getSessionKey(sessionId) : null;
@@ -823,7 +930,7 @@ app.post('/api/encryption/encrypt', (req, res) => {
   }
 });
 
-app.post('/api/encryption/decrypt', (req, res) => {
+app.post('/api/encryption/decrypt', authMiddleware(authManager), adminAuth, sensitiveOpLimiter, (req, res) => {
   try {
     const { encrypted, sessionId, parseJson } = req.body;
     const key = sessionId ? encryptionSystem.getSessionKey(sessionId) : null;
@@ -832,6 +939,47 @@ app.post('/api/encryption/decrypt', (req, res) => {
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
+});
+
+// Security Audit API Routes (admin only)
+app.get('/api/security/audit', authMiddleware(authManager), adminAuth, (req, res) => {
+  const limit = parseInt(req.query.limit) || 100;
+  const filters = {
+    category: req.query.category,
+    severity: req.query.severity,
+    userId: req.query.userId,
+    action: req.query.action
+  };
+  res.json(securityAudit.getRecent(limit, filters));
+});
+
+app.get('/api/security/lockouts', authMiddleware(authManager), adminAuth, (req, res) => {
+  const lockouts = [];
+  for (const [key, record] of accountLockout.attempts.entries()) {
+    if (accountLockout.isLocked(key)) {
+      lockouts.push({ key, ...record });
+    }
+  }
+  res.json(lockouts);
+});
+
+app.get('/api/security/status', authMiddleware(authManager), adminAuth, (req, res) => {
+  res.json({
+    ipAllowlist: {
+      enabled: ipAllowlist.enabled,
+      count: ipAllowlist.allowedIps.size
+    },
+    rateLimiting: true,
+    securityHeaders: true,
+    socketAuth: true,
+    accountLockout: true,
+    inputSanitization: true,
+    auditLogging: true,
+    corsLocked: true,
+    activeLockouts: [...accountLockout.attempts.entries()]
+      .filter(([k]) => accountLockout.isLocked(k)).length,
+    recentSecurityEvents: securityAudit.getRecent(10, { category: 'security' }).length
+  });
 });
 
 // Language API Routes
@@ -992,6 +1140,14 @@ app.get('/api/admin/audit', authMiddleware(authManager), adminAuth, async (req, 
   };
   const logs = await adminSystem.getAuditLog(options);
   res.json(logs);
+});
+
+// Global error handler — MUST be after all routes
+app.use(globalErrorHandler);
+
+// SPA catch-all - serve index.html for all non-API routes
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'dashboard', 'dist', 'index.html'));
 });
 
 module.exports = { app, io, agentRouter, standingOrders, operatorManager, alertSystem, sensorSystem, adminSystem };

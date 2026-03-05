@@ -1,43 +1,49 @@
 # KDT Aso - Production Dockerfile
-# Multi-stage build for optimized production image
+# Hardened: non-root user, minimal image, health check
 
-# Stage 1: Build dashboard
-FROM node:20-alpine AS dashboard-builder
-WORKDIR /app/dashboard
-COPY dashboard/package*.json ./
-RUN npm ci
-COPY dashboard/ ./
-RUN npm run build
+FROM node:18-alpine AS base
 
-# Stage 2: Production image
-FROM node:20-alpine AS production
+# Security: add non-root user
+RUN addgroup -g 1001 -S kdt && \
+    adduser -S kdt -u 1001 -G kdt
+
 WORKDIR /app
 
-# Install production dependencies
+# Install production dependencies only
 COPY package*.json ./
-RUN npm ci --only=production
+RUN npm ci --only=production && npm cache clean --force
 
-# Copy application code
+# Build dashboard
+COPY dashboard/package*.json ./dashboard/
+RUN cd dashboard && npm ci && npm cache clean --force
+
+COPY dashboard/ ./dashboard/
+RUN cd dashboard && npm run build
+
+# Copy application
 COPY core/ ./core/
 COPY agents/ ./agents/
 COPY config/ ./config/
+COPY scripts/ ./scripts/
+COPY nginx/ ./nginx/
 
-# Copy built dashboard
-COPY --from=dashboard-builder /app/dashboard/dist ./dashboard/dist
+# Create required directories with correct ownership
+RUN mkdir -p logs memory documents backups audio config/keys && \
+    chown -R kdt:kdt /app
 
-# Create directories
-RUN mkdir -p logs audio memory
+# Remove dev files
+RUN rm -rf dashboard/node_modules dashboard/src dashboard/*.json dashboard/*.ts
 
-# Set environment variables
-ENV NODE_ENV=production
-ENV PORT=3001
-
-# Expose ports
-EXPOSE 3001
+# Security: run as non-root
+USER kdt
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:3001/api/health || exit 1
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD wget -qO- http://localhost:3001/api/health || exit 1
 
-# Start the application
+EXPOSE 3001
+
+# Security: read-only root filesystem compatible
+ENV NODE_ENV=production
+
 CMD ["node", "core/index.js"]
