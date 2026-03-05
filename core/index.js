@@ -1089,6 +1089,23 @@ app.put('/api/admin/users/:id', authMiddleware(authManager), adminAuth, async (r
   try {
     const user = await adminSystem.updateUser(req.params.id, req.body);
     await adminSystem.logAction(req.user.id, 'user.update', { targetUser: user.username });
+
+    // Session rotation: if role or access changed, revoke all existing sessions
+    // so the user must re-authenticate with updated privileges
+    if (req.body.role || req.body.access) {
+      const revokedTokens = sessionLimiter.revokeAll(req.params.id);
+      jwtBlacklist.revokeAllForUser(req.params.id);
+      for (const tokenId of revokedTokens) {
+        jwtBlacklist.revoke(tokenId);
+      }
+      securityAudit.logSecurity(
+        'session_rotation',
+        `Sessions rotated for user ${req.params.id} after privilege change by ${req.user.id}`,
+        req.ip,
+        'high'
+      );
+    }
+
     res.json(user);
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -1110,7 +1127,22 @@ app.post('/api/admin/users/:id/password', authMiddleware(authManager), adminAuth
   try {
     await adminSystem.changePassword(req.params.id, req.body.password);
     await adminSystem.logAction(req.user.id, 'user.password_change', { targetUser: req.params.id });
-    res.json({ success: true });
+
+    // Session rotation: revoke all sessions after password change
+    // Forces re-authentication with new credentials
+    const revokedTokens = sessionLimiter.revokeAll(req.params.id);
+    jwtBlacklist.revokeAllForUser(req.params.id);
+    for (const tokenId of revokedTokens) {
+      jwtBlacklist.revoke(tokenId);
+    }
+    securityAudit.logSecurity(
+      'session_rotation',
+      `Sessions rotated for user ${req.params.id} after password change by ${req.user.id}`,
+      req.ip,
+      'high'
+    );
+
+    res.json({ success: true, sessionsRevoked: revokedTokens.length });
   } catch (error) {
     res.status(400).json({ error: error.message });
   }

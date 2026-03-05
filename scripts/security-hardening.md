@@ -43,10 +43,10 @@
 
 ## Pending Tasks
 
-### Round 4 — Session management improvements
-- [ ] Add JWT blacklist (for forced logout)
-- [ ] Add session rotation on privilege change
-- [ ] Add concurrent session limit
+### Round 4 — Session management improvements ✅ 2026-03-05 03:57 EST
+- [x] Add JWT blacklist (for forced logout) — JwtBlacklist class in security.js, wired in index.js with revoke/revokeAllForUser/isRevoked
+- [x] Add session rotation on privilege change — auto-revoke all sessions on role/access change and password change in admin routes
+- [x] Add concurrent session limit — SessionLimiter class (max 3 per user), oldest evicted on new login
 
 ### Round 8 — Security tests
 - [ ] Write test for rate limiting
