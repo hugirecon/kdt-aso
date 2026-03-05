@@ -70,8 +70,8 @@
 - [x] Add HTTP method enforcement per route — methodEnforcement middleware with configurable per-prefix rules, returns 405 with Allow header (2026-03-05 05:57 EST)
 - [x] Add timing-safe comparison for tokens — already implemented: timingSafeEqual in security.js using crypto.timingSafeEqual (2026-03-05 05:57 EST)
 
-### Round 11 — Monitoring & alerting
-- [ ] Add failed login alert threshold
-- [ ] Add rate limit breach notifications
-- [ ] Add system health metrics endpoint
-- [ ] Add startup security self-check
+### Round 11 — Monitoring & alerting ✅ 2026-03-05 06:27 EST
+- [x] Add failed login alert threshold — SecurityMonitor class tracks failed logins in sliding 5-min window, emits alert at threshold (default 10), broadcasts via WebSocket (2026-03-05 06:27 EST)
+- [x] Add rate limit breach notifications — SecurityMonitor tracks 429 responses, emits alert at threshold (default 20/5min), configurable via RATE_LIMIT_ALERT_THRESHOLD env var (2026-03-05 06:27 EST)
+- [x] Add system health metrics endpoint — GET /api/security/health returns uptime, memory, security counters, recent alerts, lockouts, blacklist size (admin-only) (2026-03-05 06:27 EST)
+- [x] Add startup security self-check — startupSecurityCheck() runs on boot, validates JWT_SECRET length, NODE_ENV, CORS, TRUST_PROXY, bcrypt rounds, IP allowlist, HTTPS; also available via GET /api/security/selfcheck (2026-03-05 06:27 EST)

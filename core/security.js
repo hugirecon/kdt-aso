@@ -954,6 +954,231 @@ function setupProcessHandlers() {
 }
 
 // ============================================================
+// SECURITY MONITORING & ALERTING
+// ============================================================
+
+/**
+ * SecurityMonitor — tracks failed logins, rate limit breaches,
+ * and provides alert thresholds + system health metrics.
+ */
+class SecurityMonitor {
+  constructor(options = {}) {
+    this.failedLoginThreshold = options.failedLoginThreshold || 10;   // per window
+    this.rateLimitThreshold = options.rateLimitThreshold || 20;       // breaches per window
+    this.windowMs = options.windowMs || 5 * 60 * 1000;               // 5-minute window
+    this.listeners = [];
+
+    // Sliding window counters
+    this.failedLogins = [];      // timestamps
+    this.rateLimitBreaches = []; // timestamps
+    this.alerts = [];            // recent alert log
+    this.maxAlerts = 500;
+
+    // Cleanup stale entries every minute
+    this._cleanupInterval = setInterval(() => this._cleanup(), 60 * 1000);
+  }
+
+  /**
+   * Register a callback for security alerts
+   * callback(alert) where alert = { type, severity, message, timestamp, data }
+   */
+  onAlert(callback) {
+    this.listeners.push(callback);
+  }
+
+  _emit(alert) {
+    this.alerts.push(alert);
+    if (this.alerts.length > this.maxAlerts) {
+      this.alerts = this.alerts.slice(-this.maxAlerts);
+    }
+    for (const cb of this.listeners) {
+      try { cb(alert); } catch (e) { console.error('[SecurityMonitor] alert callback error:', e); }
+    }
+  }
+
+  /**
+   * Record a failed login and check threshold
+   */
+  recordFailedLogin(ip, username) {
+    const now = Date.now();
+    this.failedLogins.push({ ts: now, ip, username });
+
+    const recentCount = this.failedLogins.filter(e => now - e.ts < this.windowMs).length;
+    if (recentCount >= this.failedLoginThreshold) {
+      const alert = {
+        type: 'failed_login_surge',
+        severity: 'high',
+        message: `${recentCount} failed logins in the last ${this.windowMs / 60000} minutes (threshold: ${this.failedLoginThreshold})`,
+        timestamp: new Date().toISOString(),
+        data: { recentCount, threshold: this.failedLoginThreshold, lastIp: ip, lastUsername: username }
+      };
+      this._emit(alert);
+      console.warn(`[SECURITY MONITOR] ⚠️  ${alert.message}`);
+    }
+  }
+
+  /**
+   * Record a rate limit breach and check threshold
+   */
+  recordRateLimitBreach(ip, path) {
+    const now = Date.now();
+    this.rateLimitBreaches.push({ ts: now, ip, path });
+
+    const recentCount = this.rateLimitBreaches.filter(e => now - e.ts < this.windowMs).length;
+    if (recentCount >= this.rateLimitThreshold) {
+      const alert = {
+        type: 'rate_limit_surge',
+        severity: 'high',
+        message: `${recentCount} rate limit breaches in the last ${this.windowMs / 60000} minutes (threshold: ${this.rateLimitThreshold})`,
+        timestamp: new Date().toISOString(),
+        data: { recentCount, threshold: this.rateLimitThreshold, lastIp: ip, lastPath: path }
+      };
+      this._emit(alert);
+      console.warn(`[SECURITY MONITOR] ⚠️  ${alert.message}`);
+    }
+  }
+
+  /**
+   * Get system health metrics (security-focused)
+   */
+  getHealthMetrics(extras = {}) {
+    const now = Date.now();
+    const recentFailedLogins = this.failedLogins.filter(e => now - e.ts < this.windowMs).length;
+    const recentRateLimitBreaches = this.rateLimitBreaches.filter(e => now - e.ts < this.windowMs).length;
+
+    return {
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      uptimeFormatted: formatUptime(process.uptime()),
+      memory: {
+        rss: process.memoryUsage().rss,
+        heapUsed: process.memoryUsage().heapUsed,
+        heapTotal: process.memoryUsage().heapTotal,
+        external: process.memoryUsage().external
+      },
+      security: {
+        failedLoginsInWindow: recentFailedLogins,
+        failedLoginThreshold: this.failedLoginThreshold,
+        rateLimitBreachesInWindow: recentRateLimitBreaches,
+        rateLimitThreshold: this.rateLimitThreshold,
+        windowMinutes: this.windowMs / 60000,
+        recentAlerts: this.alerts.slice(-10),
+        totalAlertsEmitted: this.alerts.length
+      },
+      ...extras
+    };
+  }
+
+  /**
+   * Get recent alerts
+   */
+  getAlerts(limit = 50) {
+    return this.alerts.slice(-limit);
+  }
+
+  /**
+   * Remove entries outside the sliding window
+   */
+  _cleanup() {
+    const cutoff = Date.now() - this.windowMs * 2; // keep 2x window for trends
+    this.failedLogins = this.failedLogins.filter(e => e.ts > cutoff);
+    this.rateLimitBreaches = this.rateLimitBreaches.filter(e => e.ts > cutoff);
+  }
+
+  destroy() {
+    clearInterval(this._cleanupInterval);
+  }
+}
+
+function formatUptime(seconds) {
+  const d = Math.floor(seconds / 86400);
+  const h = Math.floor((seconds % 86400) / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = Math.floor(seconds % 60);
+  const parts = [];
+  if (d > 0) parts.push(`${d}d`);
+  if (h > 0) parts.push(`${h}h`);
+  if (m > 0) parts.push(`${m}m`);
+  parts.push(`${s}s`);
+  return parts.join(' ');
+}
+
+/**
+ * Startup security self-check — validates the security configuration
+ * on boot and logs warnings for anything misconfigured.
+ * Returns { passed: boolean, checks: [...] }
+ */
+function startupSecurityCheck(options = {}) {
+  const checks = [];
+
+  function check(name, condition, warnMsg) {
+    const passed = !!condition;
+    checks.push({ name, passed, message: passed ? 'OK' : warnMsg });
+    if (!passed) console.warn(`[SECURITY SELFCHECK] ⚠️  ${name}: ${warnMsg}`);
+    else console.log(`[SECURITY SELFCHECK] ✅ ${name}`);
+  }
+
+  // 1. JWT_SECRET is set and not a weak default
+  check(
+    'JWT_SECRET',
+    process.env.JWT_SECRET && process.env.JWT_SECRET.length >= 32,
+    'JWT_SECRET missing or too short (need ≥32 chars)'
+  );
+
+  // 2. NODE_ENV is production (or at least not undefined)
+  check(
+    'NODE_ENV',
+    process.env.NODE_ENV === 'production',
+    `NODE_ENV is "${process.env.NODE_ENV || 'undefined'}" — should be "production" in deployment`
+  );
+
+  // 3. CORS origins are configured
+  const corsOrigins = process.env.CORS_ORIGINS;
+  check(
+    'CORS_ORIGINS',
+    corsOrigins && corsOrigins.length > 0,
+    'No CORS_ORIGINS configured — falling back to localhost defaults'
+  );
+
+  // 4. Trust proxy is explicitly set
+  check(
+    'TRUST_PROXY',
+    process.env.TRUST_PROXY !== undefined,
+    'TRUST_PROXY not set — rate limiting may not work correctly behind a reverse proxy'
+  );
+
+  // 5. Bcrypt rounds are adequate
+  const bcryptRounds = parseInt(process.env.BCRYPT_ROUNDS || '12');
+  check(
+    'BCRYPT_ROUNDS',
+    bcryptRounds >= 12,
+    `Bcrypt rounds = ${bcryptRounds}, recommended ≥12`
+  );
+
+  // 6. IP allowlist awareness
+  check(
+    'IP_ALLOWLIST',
+    process.env.IP_ALLOWLIST_ENABLED === 'true' || process.env.NODE_ENV !== 'production',
+    'IP allowlist disabled in production — consider enabling for sensitive deployments'
+  );
+
+  // 7. HTTPS enforcement (if in production)
+  if (process.env.NODE_ENV === 'production') {
+    check(
+      'HTTPS',
+      process.env.FORCE_HTTPS === 'true' || process.env.TRUST_PROXY === 'true',
+      'No HTTPS enforcement detected in production'
+    );
+  }
+
+  const allPassed = checks.every(c => c.passed);
+  const summary = `Security self-check: ${checks.filter(c => c.passed).length}/${checks.length} passed`;
+  console.log(`[SECURITY SELFCHECK] ${allPassed ? '✅' : '⚠️ '} ${summary}`);
+
+  return { passed: allPassed, checks, summary };
+}
+
+// ============================================================
 // EXPORTS
 // ============================================================
 
@@ -985,6 +1210,10 @@ module.exports = {
   IpAllowlist,
   JwtBlacklist,
   SessionLimiter,
+  SecurityMonitor,
+  
+  // Startup
+  startupSecurityCheck,
   
   // Utilities
   sanitizeString,

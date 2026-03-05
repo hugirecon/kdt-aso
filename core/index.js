@@ -48,6 +48,8 @@ const {
   IpAllowlist,
   JwtBlacklist,
   SessionLimiter,
+  SecurityMonitor,
+  startupSecurityCheck,
   MAX_BODY_SIZE
 } = require('./security');
 
@@ -66,6 +68,18 @@ const accountLockout = new AccountLockout({ maxAttempts: 5, lockoutDuration: 15 
 const apiKeyManager = new ApiKeyManager();
 const jwtBlacklist = new JwtBlacklist();
 const sessionLimiter = new SessionLimiter(3);  // Max 3 concurrent sessions per user
+
+const securityMonitor = new SecurityMonitor({
+  failedLoginThreshold: parseInt(process.env.FAILED_LOGIN_ALERT_THRESHOLD || '10'),
+  rateLimitThreshold: parseInt(process.env.RATE_LIMIT_ALERT_THRESHOLD || '20'),
+  windowMs: 5 * 60 * 1000
+});
+
+// Emit security monitor alerts to WebSocket clients (admins)
+securityMonitor.onAlert((alert) => {
+  // io may not be ready yet at boot, but will be once server starts
+  try { io.emit('security:alert', alert); } catch (_) { /* pre-boot */ }
+});
 
 // Wire blacklist/session limiter into auth system
 const { AuthManager: AuthManagerClass } = require('./auth');
@@ -116,7 +130,18 @@ app.use(inputSanitizer);
 // 6. Request logging
 app.use(requestLogger(securityAudit));
 
-// 7. General API rate limiting
+// 7. General API rate limiting (with breach monitoring)
+app.use('/api', (req, res, next) => {
+  // Hook into rate limiter: if res gets 429, record the breach
+  const origStatus = res.status.bind(res);
+  res.status = function(code) {
+    if (code === 429) {
+      securityMonitor.recordRateLimitBreach(req.ip, req.path);
+    }
+    return origStatus(code);
+  };
+  next();
+});
 app.use('/api', apiLimiter);
 
 // 8. Content-Type validation on API routes
@@ -301,6 +326,7 @@ app.post('/api/auth/login', authLimiter, async (req, res) => {
     accountLockout.recordFailure(ipKey);
     accountLockout.recordFailure(userKey);
     securityAudit.logAuth('login_failed', `User: ${username}`, req.ip, null, false);
+    securityMonitor.recordFailedLogin(req.ip, username);
   }
   
   res.json(result);
@@ -786,6 +812,12 @@ httpServer.listen(PORT, () => {
   All systems operational. Awaiting Operator.
   `);
 
+  // Run startup security self-check
+  const selfCheck = startupSecurityCheck();
+  if (!selfCheck.passed) {
+    console.warn(`[STARTUP] Security self-check has warnings — review above`);
+  }
+
   // Initialize time-based standing orders
   standingOrders.initializeMonitors();
 });
@@ -1045,6 +1077,31 @@ app.get('/api/security/status', authMiddleware(authManager), adminAuth, (req, re
       .filter(([k]) => accountLockout.isLocked(k)).length,
     recentSecurityEvents: securityAudit.getRecent(10, { category: 'security' }).length
   });
+});
+
+// --- Security Monitoring & Health Endpoints ---
+
+// System health metrics (security-focused)
+app.get('/api/security/health', authMiddleware(authManager), adminAuth, (req, res) => {
+  const metrics = securityMonitor.getHealthMetrics({
+    activeLockouts: [...accountLockout.attempts.entries()]
+      .filter(([k]) => accountLockout.isLocked(k)).length,
+    blacklistedTokens: jwtBlacklist.size,
+    auditLogSize: securityAudit.events.length
+  });
+  res.json(metrics);
+});
+
+// Security alerts
+app.get('/api/security/alerts', authMiddleware(authManager), adminAuth, (req, res) => {
+  const limit = parseInt(req.query.limit) || 50;
+  res.json(securityMonitor.getAlerts(limit));
+});
+
+// Security self-check (re-run on demand)
+app.get('/api/security/selfcheck', authMiddleware(authManager), adminAuth, (req, res) => {
+  const result = startupSecurityCheck();
+  res.json(result);
 });
 
 // Language API Routes
