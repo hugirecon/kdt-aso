@@ -2,7 +2,7 @@
 
 *Autonomous Operations Platform — Knight Division Tactical*
 
-Last updated: 2026-02-19
+Last updated: 2026-03-05
 
 ---
 
@@ -560,6 +560,62 @@ npm run dev
 - HMAC signatures prevent tampering
 - Timing-safe comparison prevents attacks
 
+### 17. Security Hardening (Comprehensive)
+- [x] **Helmet security headers** — CSP, HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy
+- [x] **CORS lockdown** — Strict origin allowlist (no more `origin: true`)
+- [x] **Rate limiting** — 100 req/15min general, 5/15min auth, configurable per-route
+- [x] **Input sanitization** — XSS prevention, prototype pollution blocking, nested object sanitization
+- [x] **Account lockout** — 5 failed attempts → 15 min lockout with status tracking
+- [x] **Socket.io authentication** — JWT required for all WebSocket connections
+- [x] **Request body size limits** — 1MB max payload
+- [x] **Security audit logging** — All security events logged with timestamps
+- [x] **JWT hardening** — 8h expiry (down from 24h), mandatory JWT_SECRET (no fallback), SameSite=strict cookies
+- [x] **bcrypt strengthening** — 12 rounds (up from 10)
+- [x] **Rate-limited sensitive ops** — Encryption and backup endpoints throttled
+- [x] **Admin-only encryption API** — Restricted to admin role
+- [x] **Reduced health endpoint leakage** — Minimal info in production
+- [x] **IP allowlist capability** — Configurable, off by default
+- [x] **Request logging middleware** — All requests logged with method, path, status, duration
+- [x] **Security status dashboard** — `/api/security/status` endpoint
+- [x] **Path traversal guards** — `pathTraversalGuard` middleware on document/memory routes
+- [x] **Global error handler** — No stack trace leaks in production
+- [x] **Uncaught exception handlers** — Graceful handling of unhandled rejections
+- [x] **Graceful shutdown** — SIGTERM/SIGINT handlers for clean exit
+- [x] **nginx hardening** — X-Frame DENY, CSP, Permissions-Policy, server_tokens off, 1MB body limit, connection rate limiting
+- [x] **Docker hardening** — Non-root user (kdt:1001), no-new-privileges, Alpine-based minimal image, production health check
+- [x] **Dependency audit** — 0 vulnerabilities, updated tar/minimatch
+- [x] **JWT blacklist** — Forced logout support with `JwtBlacklist` class (revoke/revokeAllForUser/isRevoked)
+- [x] **Session rotation on privilege change** — Auto-revoke all sessions on role/access/password change
+- [x] **Concurrent session limit** — Max 3 per user, oldest evicted on new login
+- [x] **Request ID tracking** — Correlation IDs via `X-Request-ID` header
+- [x] **API versioning headers** — `X-API-Version` on all responses
+- [x] **Response sanitization** — Strips passwordHash, resetToken, stackTrace from JSON responses
+- [x] **Content-Type validation** — `requireJson` middleware rejects non-JSON on API routes
+- [x] **HTTP method enforcement** — Per-prefix rules, returns 405 with Allow header
+- [x] **Timing-safe token comparison** — `crypto.timingSafeEqual` for all token checks
+- [x] **Failed login alert threshold** — SecurityMonitor tracks failures in 5-min sliding window, alerts at threshold (default 10)
+- [x] **Rate limit breach notifications** — Alerts at 20 429s per 5min, configurable via env var
+- [x] **System health metrics** — `/api/security/health` with uptime, memory, counters, alerts, lockouts
+- [x] **Startup security self-check** — Validates JWT_SECRET length, NODE_ENV, CORS, TRUST_PROXY, bcrypt rounds, HTTPS on boot
+- [x] **Security test suite** — 30+ tests covering rate limiting, lockout, CORS, socket auth, sanitization, path traversal, headers, content-type, error handling
+
+**Components:**
+- `core/security.js` — Centralized security middleware (all guards, monitors, limiters)
+- `__tests__/security.test.js` — Security unit tests
+- `__tests__/security-http.test.js` — Security HTTP integration tests
+- `SECURITY.md` — Security policy document
+- `docs/API.md` — Full API documentation (85 endpoints)
+
+**API Endpoints:**
+- `GET /api/security/status` — Security configuration overview
+- `GET /api/security/health` — System health metrics (admin-only)
+- `GET /api/security/selfcheck` — Security self-check results
+- `GET /api/security/lockout/:username` — Lockout status for user
+- `POST /api/auth/revoke` — Revoke JWT session
+- `POST /api/auth/revoke-all` — Revoke all sessions for user
+
+Added: 2026-03-05 (11 rounds of hardening, 02:15–06:27 EST)
+
 ---
 
 ## 📊 Feature Summary
@@ -582,5 +638,6 @@ npm run dev
 | 14 | Offline Mode | ✅ | Feb 20 |
 | 15 | Backup System | ✅ | Feb 20 |
 | 16 | End-to-End Encryption | ✅ | Feb 20 |
+| 17 | Security Hardening (Comprehensive) | ✅ | Mar 5 |
 
-**Total: 16 features completed**
+**Total: 17 features completed**
