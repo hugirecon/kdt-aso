@@ -59,7 +59,7 @@
 
 ### Round 9 — Documentation & cleanup
 - [x] Update README with security section — comprehensive Security section added covering auth, rate limiting, input validation, headers, CORS, error handling, infra, monitoring, and testing (2026-03-05 04:57 EST)
-- [ ] Document all API endpoints
+- [x] Document all API endpoints — comprehensive docs/API.md with all 85 endpoints, WebSocket events, rate limits, error handling, and security middleware pipeline (2026-03-05 05:27 EST)
 - [ ] Create security policy document (SECURITY.md)
 
 ### Round 10 — Advanced hardening
