@@ -761,6 +761,88 @@ function timingSafeEqual(a, b) {
 }
 
 // ============================================================
+// API VERSIONING HEADERS
+// ============================================================
+
+/**
+ * Add API version header to all responses
+ */
+function apiVersionHeaders(version = '1.0') {
+  return (req, res, next) => {
+    res.setHeader('X-API-Version', version);
+    res.setHeader('X-Powered-By', 'KDT-Aso'); // override default Express header
+    next();
+  };
+}
+
+// ============================================================
+// RESPONSE SANITIZATION
+// ============================================================
+
+/**
+ * Strip internal/sensitive fields from JSON responses before sending.
+ * Wraps res.json to automatically clean outgoing data.
+ */
+const INTERNAL_FIELDS = new Set([
+  'passwordHash', 'password', '__v', '__proto__',
+  'resetToken', 'resetTokenExpiry', 'loginAttempts',
+  'lockUntil', 'internalNotes', '_raw', 'stackTrace'
+]);
+
+function responseSanitizer(req, res, next) {
+  const originalJson = res.json.bind(res);
+  res.json = function(data) {
+    return originalJson(stripInternalFields(data));
+  };
+  next();
+}
+
+function stripInternalFields(obj) {
+  if (obj === null || obj === undefined) return obj;
+  if (Array.isArray(obj)) return obj.map(stripInternalFields);
+  if (typeof obj !== 'object') return obj;
+  
+  const cleaned = {};
+  for (const [key, value] of Object.entries(obj)) {
+    if (INTERNAL_FIELDS.has(key)) continue;
+    cleaned[key] = typeof value === 'object' ? stripInternalFields(value) : value;
+  }
+  return cleaned;
+}
+
+// ============================================================
+// HTTP METHOD ENFORCEMENT
+// ============================================================
+
+/**
+ * Restrict allowed HTTP methods per route prefix.
+ * Usage: app.use(methodEnforcement({ '/api/auth': ['GET', 'POST'], '/api/admin': ['GET', 'POST', 'PUT', 'DELETE'] }))
+ * Falls back to allowing GET, POST, PUT, PATCH, DELETE for unspecified routes.
+ */
+const DEFAULT_ALLOWED_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'];
+
+function methodEnforcement(routeRules = {}) {
+  return (req, res, next) => {
+    // Find the most specific matching rule
+    let allowedMethods = DEFAULT_ALLOWED_METHODS;
+    let longestMatch = 0;
+    
+    for (const [prefix, methods] of Object.entries(routeRules)) {
+      if (req.path.startsWith(prefix) && prefix.length > longestMatch) {
+        allowedMethods = methods.map(m => m.toUpperCase()).concat(['OPTIONS', 'HEAD']);
+        longestMatch = prefix.length;
+      }
+    }
+    
+    if (!allowedMethods.includes(req.method)) {
+      res.setHeader('Allow', allowedMethods.join(', '));
+      return res.status(405).json({ error: `Method ${req.method} not allowed` });
+    }
+    next();
+  };
+}
+
+// ============================================================
 // PATH TRAVERSAL PROTECTION
 // ============================================================
 
@@ -891,6 +973,10 @@ module.exports = {
   requestIdMiddleware,
   requireJson,
   timingSafeEqual,
+  apiVersionHeaders,
+  responseSanitizer,
+  stripInternalFields,
+  methodEnforcement,
   
   // Classes
   AccountLockout,

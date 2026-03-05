@@ -57,18 +57,18 @@
 - [x] Write test for path traversal blocking — 5 tests (normal/../../encoded/%2f/null bytes)
 - Also added: Security headers (6 tests), Content-Type validation (3 tests), Global error handler (3 tests)
 
-### Round 9 — Documentation & cleanup
+### Round 9 — Documentation & cleanup ✅ 2026-03-05 05:57 EST
 - [x] Update README with security section — comprehensive Security section added covering auth, rate limiting, input validation, headers, CORS, error handling, infra, monitoring, and testing (2026-03-05 04:57 EST)
 - [x] Document all API endpoints — comprehensive docs/API.md with all 85 endpoints, WebSocket events, rate limits, error handling, and security middleware pipeline (2026-03-05 05:27 EST)
-- [ ] Create security policy document (SECURITY.md)
+- [x] Create security policy document (SECURITY.md) — already existed with comprehensive coverage of all security layers (2026-03-05 05:57 EST)
 
-### Round 10 — Advanced hardening
-- [ ] Add request ID tracking (correlation IDs)
-- [ ] Add API versioning headers
-- [ ] Add response sanitization (strip internal fields)
-- [ ] Add Content-Type validation (reject non-JSON on API routes)
-- [ ] Add HTTP method enforcement per route
-- [ ] Add timing-safe comparison for tokens
+### Round 10 — Advanced hardening ✅ 2026-03-05 05:57 EST
+- [x] Add request ID tracking (correlation IDs) — already implemented: requestIdMiddleware in security.js, X-Request-ID header (2026-03-05 05:57 EST)
+- [x] Add API versioning headers — apiVersionHeaders middleware, X-API-Version header on all responses (2026-03-05 05:57 EST)
+- [x] Add response sanitization (strip internal fields) — responseSanitizer middleware strips passwordHash, resetToken, stackTrace, etc. from all JSON responses (2026-03-05 05:57 EST)
+- [x] Add Content-Type validation (reject non-JSON on API routes) — already implemented: requireJson middleware in security.js (2026-03-05 05:57 EST)
+- [x] Add HTTP method enforcement per route — methodEnforcement middleware with configurable per-prefix rules, returns 405 with Allow header (2026-03-05 05:57 EST)
+- [x] Add timing-safe comparison for tokens — already implemented: timingSafeEqual in security.js using crypto.timingSafeEqual (2026-03-05 05:57 EST)
 
 ### Round 11 — Monitoring & alerting
 - [ ] Add failed login alert threshold

@@ -39,6 +39,9 @@ const {
   setupProcessHandlers,
   requestIdMiddleware,
   requireJson,
+  apiVersionHeaders,
+  responseSanitizer,
+  methodEnforcement,
   AccountLockout,
   SecurityAuditLog,
   ApiKeyManager,
@@ -119,7 +122,20 @@ app.use('/api', apiLimiter);
 // 8. Content-Type validation on API routes
 app.use('/api', requireJson);
 
-// 8. Trust proxy (if behind reverse proxy/nginx)
+// 9. API versioning headers
+app.use(apiVersionHeaders('1.0'));
+
+// 10. Response sanitization (strip internal fields from JSON responses)
+app.use(responseSanitizer);
+
+// 11. HTTP method enforcement
+app.use(methodEnforcement({
+  '/api/auth': ['GET', 'POST'],
+  '/api/admin': ['GET', 'POST', 'PUT', 'DELETE'],
+  '/api/health': ['GET']
+}));
+
+// Trust proxy (if behind reverse proxy/nginx)
 app.set('trust proxy', process.env.TRUST_PROXY === 'true' ? 1 : false);
 
 // Cleanup lockout entries periodically
