@@ -37,10 +37,14 @@ const {
   pathTraversalGuard,
   globalErrorHandler,
   setupProcessHandlers,
+  requestIdMiddleware,
+  requireJson,
   AccountLockout,
   SecurityAuditLog,
   ApiKeyManager,
   IpAllowlist,
+  JwtBlacklist,
+  SessionLimiter,
   MAX_BODY_SIZE
 } = require('./security');
 
@@ -57,6 +61,13 @@ const encryptionSystem = new EncryptionSystem({ keyDir: './config/keys' });
 const securityAudit = new SecurityAuditLog();
 const accountLockout = new AccountLockout({ maxAttempts: 5, lockoutDuration: 15 * 60 * 1000 });
 const apiKeyManager = new ApiKeyManager();
+const jwtBlacklist = new JwtBlacklist();
+const sessionLimiter = new SessionLimiter(3);  // Max 3 concurrent sessions per user
+
+// Wire blacklist/session limiter into auth system
+const { AuthManager: AuthManagerClass } = require('./auth');
+AuthManagerClass.setBlacklist(jwtBlacklist);
+AuthManagerClass.setSessionLimiter(sessionLimiter);
 const ipAllowlist = new IpAllowlist({ 
   enabled: process.env.IP_ALLOWLIST_ENABLED === 'true',
   allowedIps: process.env.ALLOWED_IPS ? process.env.ALLOWED_IPS.split(',') : ['127.0.0.1', '::1', '::ffff:127.0.0.1']
@@ -78,6 +89,9 @@ const io = new Server(httpServer, {
 // ============================================================
 // SECURITY MIDDLEWARE STACK (order matters)
 // ============================================================
+
+// 0. Request ID tracking
+app.use(requestIdMiddleware);
 
 // 1. Security headers (helmet)
 app.use(securityHeaders);
@@ -101,6 +115,9 @@ app.use(requestLogger(securityAudit));
 
 // 7. General API rate limiting
 app.use('/api', apiLimiter);
+
+// 8. Content-Type validation on API routes
+app.use('/api', requireJson);
 
 // 8. Trust proxy (if behind reverse proxy/nginx)
 app.set('trust proxy', process.env.TRUST_PROXY === 'true' ? 1 : false);
@@ -961,6 +978,38 @@ app.get('/api/security/lockouts', authMiddleware(authManager), adminAuth, (req, 
     }
   }
   res.json(lockouts);
+});
+
+// Force logout a specific user (admin) or self
+app.post('/api/security/revoke-sessions', authMiddleware(authManager), (req, res) => {
+  const { userId } = req.body;
+  const targetId = userId || req.user.id;
+  
+  // Only admins can revoke other users' sessions
+  if (targetId !== req.user.id && req.user.role !== 'admin') {
+    return res.status(403).json({ error: 'Admin access required to revoke other users' });
+  }
+
+  // Revoke all sessions
+  const revokedTokens = sessionLimiter.revokeAll(targetId);
+  jwtBlacklist.revokeAllForUser(targetId);
+  
+  securityAudit.logSecurity('sessions_revoked', `All sessions revoked for user: ${targetId} by ${req.user.id}`, req.ip, 'high');
+  
+  res.json({ 
+    success: true, 
+    revokedSessions: revokedTokens.length,
+    message: `All sessions for ${targetId} have been revoked`
+  });
+});
+
+// Get active sessions for current user
+app.get('/api/security/sessions', authMiddleware(authManager), (req, res) => {
+  const sessions = sessionLimiter.getSessions(req.user.id);
+  res.json(sessions.map(s => ({
+    ...s,
+    tokenId: s.tokenId.substring(0, 8) + '...'  // Mask token ID
+  })));
 });
 
 app.get('/api/security/status', authMiddleware(authManager), adminAuth, (req, res) => {

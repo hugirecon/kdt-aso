@@ -412,6 +412,132 @@ function parseCookie(cookieHeader, name) {
 }
 
 // ============================================================
+// JWT BLACKLIST (for forced logout / token revocation)
+// ============================================================
+
+class JwtBlacklist {
+  constructor() {
+    this.blacklisted = new Map();  // jti or token hash -> expiry timestamp
+    // Cleanup every 10 minutes
+    setInterval(() => this.cleanup(), 10 * 60 * 1000);
+  }
+
+  /**
+   * Blacklist a token (by its jti claim or hash)
+   */
+  revoke(tokenId, expiresAt) {
+    this.blacklisted.set(tokenId, expiresAt || Date.now() + 8 * 60 * 60 * 1000);
+  }
+
+  /**
+   * Check if a token is blacklisted
+   */
+  isRevoked(tokenId) {
+    return this.blacklisted.has(tokenId);
+  }
+
+  /**
+   * Revoke all tokens for a user (by storing a "revoked before" timestamp)
+   */
+  revokeAllForUser(userId) {
+    this.blacklisted.set(`user:${userId}`, Date.now());
+  }
+
+  /**
+   * Check if a user's tokens issued before a certain time are revoked
+   */
+  isUserRevoked(userId, tokenIssuedAt) {
+    const revokedBefore = this.blacklisted.get(`user:${userId}`);
+    if (!revokedBefore) return false;
+    return tokenIssuedAt * 1000 <= revokedBefore;  // JWT iat is in seconds
+  }
+
+  /**
+   * Remove expired entries
+   */
+  cleanup() {
+    const now = Date.now();
+    for (const [key, expiry] of this.blacklisted.entries()) {
+      if (typeof expiry === 'number' && !key.startsWith('user:') && expiry < now) {
+        this.blacklisted.delete(key);
+      }
+    }
+  }
+
+  /**
+   * Get count of blacklisted entries
+   */
+  get size() {
+    return this.blacklisted.size;
+  }
+}
+
+// ============================================================
+// CONCURRENT SESSION LIMITER
+// ============================================================
+
+class SessionLimiter {
+  constructor(maxSessions = 3) {
+    this.maxSessions = maxSessions;
+    this.sessions = new Map();  // userId -> [{ tokenId, createdAt, ip, userAgent }]
+  }
+
+  /**
+   * Register a new session, evict oldest if over limit
+   */
+  register(userId, tokenId, ip, userAgent) {
+    if (!this.sessions.has(userId)) {
+      this.sessions.set(userId, []);
+    }
+    
+    const userSessions = this.sessions.get(userId);
+    userSessions.push({
+      tokenId,
+      createdAt: Date.now(),
+      ip,
+      userAgent: (userAgent || '').substring(0, 100)
+    });
+
+    const evicted = [];
+    // If over limit, evict oldest sessions
+    while (userSessions.length > this.maxSessions) {
+      const old = userSessions.shift();
+      evicted.push(old.tokenId);
+    }
+
+    return evicted;  // Return token IDs that should be blacklisted
+  }
+
+  /**
+   * Remove a session (logout)
+   */
+  remove(userId, tokenId) {
+    const userSessions = this.sessions.get(userId);
+    if (!userSessions) return;
+    
+    const idx = userSessions.findIndex(s => s.tokenId === tokenId);
+    if (idx !== -1) userSessions.splice(idx, 1);
+    if (userSessions.length === 0) this.sessions.delete(userId);
+  }
+
+  /**
+   * Get active sessions for a user
+   */
+  getSessions(userId) {
+    return this.sessions.get(userId) || [];
+  }
+
+  /**
+   * Force logout all sessions for a user
+   */
+  revokeAll(userId) {
+    const sessions = this.sessions.get(userId) || [];
+    this.sessions.delete(userId);
+    return sessions.map(s => s.tokenId);
+  }
+}
+
+// ============================================================
 // API KEY SYSTEM (for future property/agent instances)
 // ============================================================
 
@@ -590,6 +716,51 @@ class IpAllowlist {
 }
 
 // ============================================================
+// REQUEST ID TRACKING
+// ============================================================
+
+/**
+ * Add unique request ID for correlation/debugging
+ */
+function requestIdMiddleware(req, res, next) {
+  req.id = crypto.randomBytes(8).toString('hex');
+  res.setHeader('X-Request-ID', req.id);
+  next();
+}
+
+// ============================================================
+// CONTENT-TYPE VALIDATION
+// ============================================================
+
+/**
+ * Reject non-JSON content types on API routes
+ */
+function requireJson(req, res, next) {
+  if (['POST', 'PUT', 'PATCH'].includes(req.method)) {
+    const contentType = req.headers['content-type'];
+    if (!contentType || !contentType.includes('application/json')) {
+      return res.status(415).json({ error: 'Content-Type must be application/json' });
+    }
+  }
+  next();
+}
+
+// ============================================================
+// TIMING-SAFE TOKEN COMPARISON
+// ============================================================
+
+/**
+ * Timing-safe string comparison (prevents timing attacks)
+ */
+function timingSafeEqual(a, b) {
+  if (typeof a !== 'string' || typeof b !== 'string') return false;
+  const bufA = Buffer.from(a);
+  const bufB = Buffer.from(b);
+  if (bufA.length !== bufB.length) return false;
+  return crypto.timingSafeEqual(bufA, bufB);
+}
+
+// ============================================================
 // PATH TRAVERSAL PROTECTION
 // ============================================================
 
@@ -600,21 +771,44 @@ function pathTraversalGuard(paramNames = ['id']) {
   return (req, res, next) => {
     for (const param of paramNames) {
       const value = req.params[param] || req.query[param];
-      if (value && (
-        value.includes('..') || 
-        value.includes('/') || 
-        value.includes('\\') ||
-        value.includes('\0') ||
-        value.includes('%2e') ||
-        value.includes('%2f') ||
-        value.includes('%5c')
-      )) {
+      if (value && !isSafePathComponent(value)) {
         console.warn(`[SECURITY] Path traversal attempt blocked: ${param}=${value} from ${req.ip}`);
         return res.status(400).json({ error: 'Invalid parameter' });
       }
     }
     next();
   };
+}
+
+/**
+ * Check if a string is safe to use as a path component (no traversal, no special chars)
+ * Use this inside class methods as defense-in-depth
+ */
+function isSafePathComponent(value) {
+  if (typeof value !== 'string') return false;
+  if (value.length === 0 || value.length > 255) return false;
+  return !(
+    value.includes('..') ||
+    value.includes('/') ||
+    value.includes('\\') ||
+    value.includes('\0') ||
+    value.includes('%2e') ||
+    value.includes('%2f') ||
+    value.includes('%5c') ||
+    value.includes('%00') ||
+    /[\x00-\x1f\x7f]/.test(value)  // control characters
+  );
+}
+
+/**
+ * Sanitize and validate a path component, throwing if invalid.
+ * Call this in any code that builds file paths from user input.
+ */
+function validatePathComponent(value, paramName = 'parameter') {
+  if (!isSafePathComponent(value)) {
+    throw new Error(`Invalid ${paramName}: contains forbidden characters`);
+  }
+  return value;
 }
 
 // ============================================================
@@ -694,17 +888,24 @@ module.exports = {
   pathTraversalGuard,
   globalErrorHandler,
   setupProcessHandlers,
+  requestIdMiddleware,
+  requireJson,
+  timingSafeEqual,
   
   // Classes
   AccountLockout,
   SecurityAuditLog,
   ApiKeyManager,
   IpAllowlist,
+  JwtBlacklist,
+  SessionLimiter,
   
   // Utilities
   sanitizeString,
   sanitizeObject,
   requireFields,
+  isSafePathComponent,
+  validatePathComponent,
   
   // Constants
   MAX_BODY_SIZE

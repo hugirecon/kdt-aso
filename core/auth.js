@@ -22,8 +22,13 @@ if (!JWT_SECRET || JWT_SECRET === 'kdt-aso-production-secret-change-me') {
     process.exit(1);
   }
 }
+const crypto = require('crypto');
 const BCRYPT_ROUNDS = 12;  // Increased from 10
 const JWT_EXPIRY = '8h';   // Reduced from 24h
+
+// External blacklist/session limiter — set via AuthManager.setBlacklist() / setSessionLimiter()
+let _jwtBlacklist = null;
+let _sessionLimiter = null;
 
 class AuthManager {
   constructor() {
@@ -79,6 +84,9 @@ class AuthManager {
       return { success: false, error: 'Invalid credentials' };
     }
 
+    // Generate unique token ID for revocation support
+    const jti = crypto.randomBytes(16).toString('hex');
+    
     // Generate JWT token
     const token = jwt.sign(
       { 
@@ -86,11 +94,20 @@ class AuthManager {
         username: user.username, 
         role: user.role,
         name: user.name,
-        title: user.title
+        title: user.title,
+        jti  // Token ID for blacklist
       },
       JWT_SECRET,
       { expiresIn: JWT_EXPIRY }
     );
+
+    // Register session and evict old ones if over limit
+    if (_sessionLimiter && _jwtBlacklist) {
+      const evicted = _sessionLimiter.register(user.id, jti, null, null);
+      for (const oldJti of evicted) {
+        _jwtBlacklist.revoke(oldJti);
+      }
+    }
 
     return {
       success: true,
@@ -112,6 +129,17 @@ class AuthManager {
   verifyToken(token) {
     try {
       const decoded = jwt.verify(token, JWT_SECRET);
+      
+      // Check JWT blacklist
+      if (_jwtBlacklist) {
+        if (decoded.jti && _jwtBlacklist.isRevoked(decoded.jti)) {
+          return { valid: false, error: 'Token has been revoked' };
+        }
+        if (_jwtBlacklist.isUserRevoked(decoded.id, decoded.iat)) {
+          return { valid: false, error: 'All sessions revoked' };
+        }
+      }
+
       const user = this.users.users.find(u => u.id === decoded.id);
       if (!user) {
         return { valid: false, error: 'User not found' };
@@ -125,12 +153,23 @@ class AuthManager {
           title: user.title,
           role: user.role,
           access: user.access
-        }
+        },
+        jti: decoded.jti
       };
     } catch (error) {
       return { valid: false, error: 'Invalid token' };
     }
   }
+
+  /**
+   * Set external JWT blacklist
+   */
+  static setBlacklist(blacklist) { _jwtBlacklist = blacklist; }
+
+  /**
+   * Set external session limiter
+   */
+  static setSessionLimiter(limiter) { _sessionLimiter = limiter; }
 
   /**
    * Create new user

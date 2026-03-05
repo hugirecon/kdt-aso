@@ -6,6 +6,7 @@
 const fs = require('fs').promises;
 const path = require('path');
 const crypto = require('crypto');
+const { validatePathComponent } = require('./security');
 
 class DocumentStorage {
   constructor(storageDir = './documents') {
@@ -85,6 +86,9 @@ class DocumentStorage {
       throw new Error(`Invalid category: ${category}`);
     }
 
+    // Defense-in-depth: validate category is a safe path component
+    validatePathComponent(category, 'category');
+
     const id = crypto.randomUUID();
     const filename = `${id}.md`;
     const filePath = path.join(this.storageDir, category, filename);
@@ -118,11 +122,15 @@ class DocumentStorage {
    * Get document by ID
    */
   async get(id) {
+    validatePathComponent(id, 'document id');
     const doc = this.documents.get(id);
     if (!doc) {
       return null;
     }
 
+    // Defense-in-depth: validate stored values before building paths
+    validatePathComponent(doc.category, 'category');
+    validatePathComponent(doc.filename, 'filename');
     const filePath = path.join(this.storageDir, doc.category, doc.filename);
     
     try {
@@ -143,6 +151,7 @@ class DocumentStorage {
    * Update document
    */
   async update(id, updates) {
+    validatePathComponent(id, 'document id');
     const doc = this.documents.get(id);
     if (!doc) {
       throw new Error('Document not found');
@@ -171,11 +180,14 @@ class DocumentStorage {
    * Delete document
    */
   async delete(id) {
+    validatePathComponent(id, 'document id');
     const doc = this.documents.get(id);
     if (!doc) {
       return false;
     }
 
+    validatePathComponent(doc.category, 'category');
+    validatePathComponent(doc.filename, 'filename');
     const filePath = path.join(this.storageDir, doc.category, doc.filename);
     
     try {

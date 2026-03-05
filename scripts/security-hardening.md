@@ -25,49 +25,52 @@
 - [x] Added security status dashboard endpoint
 - [x] Added lockout status endpoint
 
-## Pending Tasks (for subsequent cron rounds)
+### Round 1b — 2026-03-05 02:25 EST (Also in initial pass)
+- [x] Added path traversal guards on document/memory routes (pathTraversalGuard middleware)
+- [x] Added global error handler (no stack trace leaks in production)
+- [x] Added uncaught exception / unhandled rejection handlers
+- [x] Added graceful shutdown (SIGTERM/SIGINT)
+- [x] Updated nginx: X-Frame DENY, CSP, Permissions-Policy, server_tokens off
+- [x] Updated nginx: request size limits (1mb body)
+- [x] Updated nginx: connection rate limiting zones
+- [x] Dockerfile: non-root user (kdt:1001)
+- [x] Dockerfile: security_opt no-new-privileges
+- [x] Dockerfile: Alpine-based minimal image
+- [x] Dockerfile: production health check
+- [x] docker-compose: no-new-privileges, property env vars
+- [x] npm audit fix: 0 vulnerabilities
+- [x] Dependency versions updated (tar, minimatch)
 
-### Round 2 — Path traversal protection
-- [ ] Audit document routes for path traversal
-- [ ] Audit memory routes for path traversal
-- [ ] Add path validation middleware
-
-### Round 3 — Error handling hardening
-- [ ] Add global error handler (don't leak stack traces)
-- [ ] Sanitize error messages in responses
-- [ ] Add uncaught exception handler
+## Pending Tasks
 
 ### Round 4 — Session management improvements
 - [ ] Add JWT blacklist (for forced logout)
 - [ ] Add session rotation on privilege change
 - [ ] Add concurrent session limit
 
-### Round 5 — Nginx hardening
-- [ ] Update nginx config with security headers
-- [ ] Add request size limits in nginx
-- [ ] Add connection rate limiting in nginx
-- [ ] Configure TLS (when domain is set up)
-
-### Round 6 — Docker hardening
-- [ ] Run as non-root user in container
-- [ ] Add security-opt (no-new-privileges)
-- [ ] Minimize container image
-- [ ] Add health check to Dockerfile
-
-### Round 7 — Dependency audit
-- [ ] Run npm audit and fix vulnerabilities
-- [ ] Remove unused dependencies
-- [ ] Pin dependency versions
-
-### Round 8 — Test security
-- [ ] Test rate limiting works
-- [ ] Test account lockout works
-- [ ] Test CORS blocking works
-- [ ] Test socket auth works
-- [ ] Test input sanitization works
+### Round 8 — Security tests
+- [ ] Write test for rate limiting
+- [ ] Write test for account lockout
+- [ ] Write test for CORS blocking
+- [ ] Write test for socket auth
+- [ ] Write test for input sanitization
+- [ ] Write test for path traversal blocking
 
 ### Round 9 — Documentation & cleanup
 - [ ] Update README with security section
 - [ ] Document all API endpoints
-- [ ] Create security policy document
-- [ ] Commit all changes
+- [ ] Create security policy document (SECURITY.md)
+
+### Round 10 — Advanced hardening
+- [ ] Add request ID tracking (correlation IDs)
+- [ ] Add API versioning headers
+- [ ] Add response sanitization (strip internal fields)
+- [ ] Add Content-Type validation (reject non-JSON on API routes)
+- [ ] Add HTTP method enforcement per route
+- [ ] Add timing-safe comparison for tokens
+
+### Round 11 — Monitoring & alerting
+- [ ] Add failed login alert threshold
+- [ ] Add rate limit breach notifications
+- [ ] Add system health metrics endpoint
+- [ ] Add startup security self-check
