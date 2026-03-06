@@ -178,7 +178,6 @@ function App() {
   }
 
   const sendMessage = (message: string, withVoice?: boolean) => {
-    console.log('[CHAT] sendMessage called:', { message: message?.substring(0, 50), socket: !!socket, activeMissionId })
     if (!socket || !message.trim()) return
 
     setMessages(prev => [...prev, {

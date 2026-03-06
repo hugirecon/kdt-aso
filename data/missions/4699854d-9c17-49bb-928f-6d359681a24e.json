@@ -3,7 +3,7 @@
   "name": "Operation IRON SENTINEL",
   "createdBy": "admin",
   "createdAt": "2026-03-06T05:07:00.510Z",
-  "updatedAt": "2026-03-06T05:07:00.514Z",
+  "updatedAt": "2026-03-06T16:13:23.361Z",
   "status": "tentative-plan",
   "currentTlpStep": 6,
   "mettTc": {
@@ -754,6 +754,1850 @@
       "properties": {},
       "createdAt": "2026-03-06T05:07:00.514Z",
       "createdBy": "co-cdr",
+      "visible": true
+    },
+    {
+      "id": "daee7b09-8e50-43b7-a1ff-3facb18c7cdc",
+      "type": "phase-line",
+      "name": "PL WHITE",
+      "description": "Northern boundary of outer cordon",
+      "coordinates": [
+        [
+          11.093,
+          7.71
+        ],
+        [
+          11.093,
+          7.72
+        ]
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:03:36.728Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "bdb54484-75fb-4dd5-ae6f-6d0d11f2887c",
+      "type": "phase-line",
+      "name": "PL YELLOW",
+      "description": "Eastern boundary of AO along water treatment facility",
+      "coordinates": [
+        [
+          11.076,
+          7.725
+        ],
+        [
+          11.095,
+          7.725
+        ]
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:03:36.729Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "9984ee83-d95c-4dc8-afe3-6f0af2033242",
+      "type": "boundary",
+      "name": "Company Eastern Boundary",
+      "description": "Alpha Company AO eastern limit along drainage canal",
+      "coordinates": [
+        [
+          11.076,
+          7.725
+        ],
+        [
+          11.08,
+          7.72
+        ],
+        [
+          11.082,
+          7.715
+        ],
+        [
+          11.084,
+          7.71
+        ]
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:03:36.729Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "d75d9816-3eb8-44bd-a9e1-cebd36535333",
+      "type": "boundary",
+      "name": "NPF Outer Cordon Boundary",
+      "description": "Nigerian Police Force responsibility area",
+      "coordinates": [
+        [
+          11.085,
+          7.722
+        ],
+        [
+          11.09,
+          7.72
+        ],
+        [
+          11.092,
+          7.715
+        ],
+        [
+          11.09,
+          7.71
+        ],
+        [
+          11.085,
+          7.71
+        ]
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:03:36.730Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "bcbef510-ee9a-4be9-a91b-b9a78f23d2cf",
+      "type": "route",
+      "name": "Route TIGER",
+      "description": "Alternate infiltration route via Factory Road",
+      "coordinates": [
+        [
+          11.076,
+          7.72
+        ],
+        [
+          11.079,
+          7.718
+        ],
+        [
+          11.082,
+          7.717
+        ],
+        [
+          11.084,
+          7.716
+        ]
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:03:36.730Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "9229ea01-6feb-4c27-9f31-d598aff4eac1",
+      "type": "route",
+      "name": "Route BEAR",
+      "description": "Emergency withdrawal route to hospital",
+      "coordinates": [
+        [
+          11.078,
+          7.714
+        ],
+        [
+          11.076,
+          7.712
+        ],
+        [
+          11.074,
+          7.708
+        ],
+        [
+          11.072,
+          7.704
+        ]
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:03:36.730Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "1e7f4e74-4a68-4bb2-8b92-b71efe0db528",
+      "type": "friendly",
+      "name": "Engineers — Breach Team",
+      "description": "Engineer squad with 3rd PLT for building entry",
+      "coordinates": [
+        11.0808,
+        7.7152
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:03:36.731Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "c490469f-966c-4d5a-97a2-6de01fe7c1bb",
+      "type": "friendly",
+      "name": "MI Team — Screening",
+      "description": "HUMINT collectors for detainee processing",
+      "coordinates": [
+        11.0815,
+        7.715
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:03:36.731Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "dbb209bf-ba98-48a8-9d55-03b396ad3d2d",
+      "type": "friendly",
+      "name": "MP Squad — Detention",
+      "description": "Military Police detainee handling team",
+      "coordinates": [
+        11.078,
+        7.7142
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:03:36.732Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "57e597a3-1786-4be8-8c7d-0955cdfcccc9",
+      "type": "friendly",
+      "name": "NPF Outer Cordon",
+      "description": "Nigerian Police Force platoon northern perimeter",
+      "coordinates": [
+        11.09,
+        7.716
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:03:36.733Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "9188501b-bc71-4fed-9af5-1d858fecceed",
+      "type": "enemy",
+      "name": "ZLF Cell West",
+      "description": "Suspected insurgent cell in market district",
+      "coordinates": [
+        11.088,
+        7.717
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:03:36.733Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "2770ba29-2bce-427d-8cfc-92f28f393e66",
+      "type": "enemy",
+      "name": "ZLF Sniper Position",
+      "description": "Possible sniper position at water tower",
+      "coordinates": [
+        11.0825,
+        7.7195
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:03:36.733Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "f2c33fac-7002-41e4-87a0-c0611e0e03d2",
+      "type": "obstacle",
+      "name": "Drainage Canal",
+      "description": "3m wide drainage canal restricting east-west movement",
+      "coordinates": [
+        [
+          11.082,
+          7.71
+        ],
+        [
+          11.083,
+          7.715
+        ],
+        [
+          11.084,
+          7.72
+        ],
+        [
+          11.085,
+          7.725
+        ]
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:03:36.734Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "289d9e8b-d28c-4057-a26b-016e6640544b",
+      "type": "obstacle",
+      "name": "Railway Crossing",
+      "description": "100m danger area at railway overpass",
+      "coordinates": [
+        [
+          11.076,
+          7.713
+        ],
+        [
+          11.08,
+          7.713
+        ]
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:03:36.734Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "cd824b99-ad3f-4629-a527-669a6c9734c2",
+      "type": "nai",
+      "name": "NAI 3 — Market Exit",
+      "description": "Primary exfiltration route to market district",
+      "coordinates": [
+        11.089,
+        7.7175
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:03:36.735Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "c1d15856-d88a-419c-8929-f0b0e8a6bb5f",
+      "type": "nai",
+      "name": "NAI 4 — Cell Tower",
+      "description": "Communications hub for ZLF network",
+      "coordinates": [
+        11.093,
+        7.72
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:03:36.735Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "9330091e-13df-47b5-8463-c8f8a4dac7b6",
+      "type": "nai",
+      "name": "NAI 5 — Tunnel Entrance",
+      "description": "Suspected underground tunnel system entry",
+      "coordinates": [
+        11.0805,
+        7.714
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:03:36.735Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "f482e602-ffb2-4fe1-b118-2425d025bfcb",
+      "type": "rally-point",
+      "name": "ORP BRAVO",
+      "description": "Alternate objective rally point east of factory",
+      "coordinates": [
+        11.084,
+        7.7155
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:03:36.736Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "9d284dc2-0bb5-4c12-bb2c-fda09a8ade46",
+      "type": "rally-point",
+      "name": "EP CHARLIE",
+      "description": "Emergency rendezvous point at water treatment plant",
+      "coordinates": [
+        11.094,
+        7.722
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:03:36.736Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "c1b50129-7193-4357-a356-dc1517f91374",
+      "type": "rally-point",
+      "name": "LZ EAGLE",
+      "description": "Helicopter landing zone for MEDEVAC",
+      "coordinates": [
+        11.076,
+        7.708
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:03:36.737Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "f40b569b-997a-4d99-bd6a-7fdda5a7e20e",
+      "type": "phase-line",
+      "name": "PL ORANGE",
+      "description": "Northern boundary of search area",
+      "coordinates": [
+        [
+          11.354,
+          7.718
+        ],
+        [
+          11.356,
+          7.718
+        ]
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:04:34.467Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "7a525619-d3d3-4759-aa87-ba2f00e634b2",
+      "type": "phase-line",
+      "name": "PL PURPLE",
+      "description": "Eastern boundary of industrial district",
+      "coordinates": [
+        [
+          11.355,
+          7.715
+        ],
+        [
+          11.355,
+          7.72
+        ]
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:04:34.468Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "9262defe-9549-48e1-b024-6cf1999e10cb",
+      "type": "objective",
+      "name": "OBJ STEEL",
+      "description": "Secondary factory building for clearing",
+      "coordinates": [
+        11.3545,
+        7.7175
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:04:34.469Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "fde39019-b2a6-4b6f-8e61-95d623470dea",
+      "type": "objective",
+      "name": "OBJ IRON",
+      "description": "Main warehouse complex",
+      "coordinates": [
+        11.3552,
+        7.7168
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:04:34.469Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "17a3a22c-f4ee-4b4b-ad31-432917f2a53c",
+      "type": "friendly",
+      "name": "CO HQ — Forward CP",
+      "description": "Company commander forward position during search",
+      "coordinates": [
+        11.3548,
+        7.717
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:04:34.470Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "980d2b7b-8998-4141-99d7-66a729e086a2",
+      "type": "friendly",
+      "name": "Mortar FDC",
+      "description": "81mm mortar fire direction center",
+      "coordinates": [
+        11.352,
+        7.7155
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:04:34.470Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "de7dd9f1-e31e-406a-91f1-6a5c54bc93ad",
+      "type": "friendly",
+      "name": "UAV Control Point",
+      "description": "RQ-11 Raven control station",
+      "coordinates": [
+        11.353,
+        7.716
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:04:34.470Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "672c9148-365c-42e8-8707-b5b6f2ae581d",
+      "type": "enemy",
+      "name": "ZLF Command Post",
+      "description": "Suspected insurgent command location",
+      "coordinates": [
+        11.3548,
+        7.7172
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:04:34.471Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "6d92f372-d4af-4a73-8586-3ca4644b400a",
+      "type": "enemy",
+      "name": "ZLF Cache Site",
+      "description": "Weapons and explosives storage",
+      "coordinates": [
+        11.355,
+        7.7165
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:04:34.471Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "ad254b2e-c897-4a01-8932-d2824e8526f6",
+      "type": "obstacle",
+      "name": "Factory Gate Barrier",
+      "description": "Concrete barriers at main entrance",
+      "coordinates": [
+        [
+          11.3542,
+          7.7168
+        ],
+        [
+          11.3545,
+          7.7168
+        ]
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:04:34.471Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "5037450f-8b1b-471e-8ce1-001f8ddee0a1",
+      "type": "obstacle",
+      "name": "Rubble Pile",
+      "description": "Demolished building blocking access",
+      "coordinates": [
+        [
+          11.3555,
+          7.717
+        ],
+        [
+          11.3557,
+          7.717
+        ]
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:04:34.472Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "74cbc913-2758-4817-90a0-972490291d76",
+      "type": "route",
+      "name": "Route WOLF",
+      "description": "Emergency withdrawal route west",
+      "coordinates": [
+        [
+          11.354,
+          7.717
+        ],
+        [
+          11.352,
+          7.717
+        ],
+        [
+          11.35,
+          7.716
+        ],
+        [
+          11.348,
+          7.715
+        ]
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:04:34.472Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "fca6c35b-af99-4bfb-9fbf-b6f804873671",
+      "type": "route",
+      "name": "Route HAWK",
+      "description": "Supply route from PL RED",
+      "coordinates": [
+        [
+          11.352,
+          7.715
+        ],
+        [
+          11.353,
+          7.716
+        ],
+        [
+          11.354,
+          7.717
+        ]
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:04:34.473Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "56e77e5e-dc02-410c-9cc9-418c722946ff",
+      "type": "boundary",
+      "name": "Company Western Boundary",
+      "description": "Western limit of company AO",
+      "coordinates": [
+        [
+          11.351,
+          7.72
+        ],
+        [
+          11.351,
+          7.718
+        ],
+        [
+          11.352,
+          7.715
+        ],
+        [
+          11.352,
+          7.712
+        ]
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:04:34.473Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "7cf72bec-2da4-4f7c-b649-536d3e81724d",
+      "type": "nai",
+      "name": "NAI 6 — Water Station",
+      "description": "Pump house observation point",
+      "coordinates": [
+        11.3565,
+        7.719
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:04:34.473Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "6871fb22-209a-482b-99a1-a514aff7e2fe",
+      "type": "nai",
+      "name": "NAI 7 — Loading Dock",
+      "description": "Vehicle staging area surveillance",
+      "coordinates": [
+        11.354,
+        7.7162
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:04:34.474Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "86a8e3db-66f1-4f96-a62f-d8d3a2b13aa0",
+      "type": "rally-point",
+      "name": "ORP CHARLIE",
+      "description": "3rd Platoon rally point",
+      "coordinates": [
+        11.3535,
+        7.716
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:04:34.474Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "2a86565b-81ae-4cbf-807d-fe0d7dffaa2e",
+      "type": "rally-point",
+      "name": "HLZ FALCON",
+      "description": "Emergency helicopter landing zone",
+      "coordinates": [
+        11.351,
+        7.714
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:04:34.474Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "b11d3903-1e5a-498a-9187-c7f47568e3b2",
+      "type": "phase-line",
+      "name": "PL BLACK",
+      "description": "Eastern boundary of search area",
+      "coordinates": [
+        [
+          11.081,
+          7.892
+        ],
+        [
+          11.081,
+          7.888
+        ]
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:12:37.852Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "3d70c933-8090-472b-84e0-294fd8185bf2",
+      "type": "phase-line",
+      "name": "PL GOLD",
+      "description": "Western limit of factory complex",
+      "coordinates": [
+        [
+          11.078,
+          7.892
+        ],
+        [
+          11.078,
+          7.888
+        ]
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:12:37.853Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "e9ee7390-57d5-42aa-88b4-488257b8a284",
+      "type": "objective",
+      "name": "OBJ SWORD",
+      "description": "Factory administrative building",
+      "coordinates": [
+        11.0795,
+        7.8905
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:12:37.853Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "a2d0aca3-100a-4b48-966c-b08653704400",
+      "type": "objective",
+      "name": "OBJ SHIELD",
+      "description": "Main production floor",
+      "coordinates": [
+        11.0802,
+        7.8898
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:12:37.854Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "9dfc6417-5a79-48aa-b0c0-292b4bc692ef",
+      "type": "friendly",
+      "name": "Company CP",
+      "description": "Forward command post at railway overpass",
+      "coordinates": [
+        11.082,
+        7.888
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:12:37.854Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "dd2d214f-ff3e-4072-a37e-248f3f5c346e",
+      "type": "friendly",
+      "name": "1st PLT — South Cordon",
+      "description": "Southern blocking positions along railway",
+      "coordinates": [
+        11.0815,
+        7.8885
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:12:37.855Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "1c88b5fb-3039-48ca-8594-bb480a82b588",
+      "type": "friendly",
+      "name": "2nd PLT — East Cordon",
+      "description": "Eastern cordon along Factory Road",
+      "coordinates": [
+        11.0825,
+        7.8902
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:12:37.856Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "db6d4e47-78e9-45a8-bb39-480ee9d74a53",
+      "type": "friendly",
+      "name": "3rd PLT — Search Team",
+      "description": "Main effort search force",
+      "coordinates": [
+        11.0798,
+        7.8895
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:12:37.856Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "cae9971b-3c48-42d2-b137-8c3424a49ab2",
+      "type": "friendly",
+      "name": "WPN PLT — SBF",
+      "description": "Support by fire at water tower",
+      "coordinates": [
+        11.0825,
+        7.895
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:12:37.857Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "f1bb45d9-7cf2-4428-92c8-829a0bab3221",
+      "type": "enemy",
+      "name": "ZLF HQ Element",
+      "description": "Command cell in factory office",
+      "coordinates": [
+        11.0796,
+        7.8906
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:12:37.857Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "72fb9cf0-e992-4b48-a466-6443bcda2b59",
+      "type": "enemy",
+      "name": "ZLF OP West",
+      "description": "Observation post at market intersection",
+      "coordinates": [
+        11.077,
+        7.8915
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:12:37.858Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "120f097d-d137-4035-81e9-6464c872b5e0",
+      "type": "enemy",
+      "name": "ZLF Fighter Cell",
+      "description": "Defensive position in main building",
+      "coordinates": [
+        11.0804,
+        7.8896
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:12:37.858Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "0582f513-d75f-45c7-b54e-debd037d7b20",
+      "type": "route",
+      "name": "Route PANTHER",
+      "description": "Approach route from FOB EAGLE",
+      "coordinates": [
+        [
+          11.065,
+          7.885
+        ],
+        [
+          11.075,
+          7.887
+        ],
+        [
+          11.082,
+          7.888
+        ]
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:12:37.859Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "e4002daf-c9b0-4bdf-be4d-5406919feccc",
+      "type": "route",
+      "name": "Route COBRA",
+      "description": "Factory Road approach",
+      "coordinates": [
+        [
+          11.085,
+          7.888
+        ],
+        [
+          11.083,
+          7.89
+        ],
+        [
+          11.081,
+          7.892
+        ]
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:12:37.859Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "21c11922-2e2a-4dc8-be4b-9546b3cc4944",
+      "type": "boundary",
+      "name": "1st PLT AO",
+      "description": "1st Platoon area of operations",
+      "coordinates": [
+        [
+          11.078,
+          7.886
+        ],
+        [
+          11.084,
+          7.886
+        ],
+        [
+          11.084,
+          7.892
+        ],
+        [
+          11.078,
+          7.892
+        ]
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:12:37.859Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "64b9903a-6587-4b80-be60-98a3f086e399",
+      "type": "boundary",
+      "name": "2nd PLT AO",
+      "description": "2nd Platoon area of operations",
+      "coordinates": [
+        [
+          11.081,
+          7.888
+        ],
+        [
+          11.087,
+          7.888
+        ],
+        [
+          11.087,
+          7.894
+        ],
+        [
+          11.081,
+          7.894
+        ]
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:12:37.860Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "7c1b3555-6bc4-4271-b213-45c97bc48ae1",
+      "type": "obstacle",
+      "name": "Factory Gate Barrier",
+      "description": "Concrete barriers at main entrance",
+      "coordinates": [
+        [
+          11.0795,
+          7.8908
+        ],
+        [
+          11.0803,
+          7.8908
+        ]
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:12:37.860Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "c2c74c26-1f55-4d27-936b-71c33cea1e3b",
+      "type": "obstacle",
+      "name": "Railway Embankment",
+      "description": "2-meter high embankment restricting movement",
+      "coordinates": [
+        [
+          11.076,
+          7.8875
+        ],
+        [
+          11.087,
+          7.8875
+        ]
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:12:37.861Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "b6d5a89a-3238-4aaf-9183-4f472326ac37",
+      "type": "nai",
+      "name": "NAI 8 — Factory Entrance",
+      "description": "Primary entry/exit point for factory",
+      "coordinates": [
+        11.0799,
+        7.8908
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:12:37.861Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "42c51d3a-35c3-45b0-9573-9b562f64593e",
+      "type": "nai",
+      "name": "NAI 9 — Cell Tower",
+      "description": "Communications relay point",
+      "coordinates": [
+        11.083,
+        7.89
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:12:37.861Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "e7edb6f6-3ee2-408a-a1b4-877c2bfbf255",
+      "type": "nai",
+      "name": "NAI 10 — Market Junction",
+      "description": "Key intersection for exfiltration",
+      "coordinates": [
+        11.077,
+        7.8918
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:12:37.862Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "ba1f246a-2545-4bdb-afa4-2e1ca52a3e56",
+      "type": "rally-point",
+      "name": "ORP DELTA",
+      "description": "Objective rally point for search force",
+      "coordinates": [
+        11.0785,
+        7.8892
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:12:37.862Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "94944b03-b63e-45be-ac33-67957a1fb3e6",
+      "type": "rally-point",
+      "name": "CCP ZARIA",
+      "description": "Casualty collection point",
+      "coordinates": [
+        11.0818,
+        7.889
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:12:37.862Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "162c1c4c-bf90-4bd8-a3e0-d6c80c6959c4",
+      "type": "rally-point",
+      "name": "EPW Collection",
+      "description": "Enemy prisoner of war holding area",
+      "coordinates": [
+        11.0822,
+        7.8895
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:12:37.863Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "9ccbd534-ba3f-4597-ac68-8b9972c70570",
+      "type": "phase-line",
+      "name": "PL SILVER",
+      "description": "Intermediate phase line between factory complex and water tower",
+      "coordinates": [
+        [
+          11.082,
+          7.892
+        ],
+        [
+          11.082,
+          7.888
+        ]
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:13:00.943Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "4661832b-68a0-43a6-b231-0ca4a0047d46",
+      "type": "phase-line",
+      "name": "PL BRONZE",
+      "description": "Western limit of search area",
+      "coordinates": [
+        [
+          11.077,
+          7.892
+        ],
+        [
+          11.077,
+          7.888
+        ]
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:13:00.944Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "c8501a33-c6b4-4edd-b8b5-0552bc695fbb",
+      "type": "objective",
+      "name": "OBJ DIAMOND",
+      "description": "Secondary search building - warehouse complex",
+      "coordinates": [
+        11.0788,
+        7.8908
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:13:00.944Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "4fe5cdb0-44c6-4d7d-aed7-164ced78e3b2",
+      "type": "friendly",
+      "name": "Engineers — Route Clearance",
+      "description": "Engineer squad clearing MSR LION",
+      "coordinates": [
+        11.079,
+        7.8875
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:13:00.945Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "db287cf2-fe96-42d6-9360-f7afdd34b0be",
+      "type": "friendly",
+      "name": "Reserve Squad — Railway OP",
+      "description": "1st PLT reserve squad at railway overpass",
+      "coordinates": [
+        11.0805,
+        7.887
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:13:00.945Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "277628c3-d1d9-4d94-84f0-988c8abbe16d",
+      "type": "friendly",
+      "name": "CO Forward CP",
+      "description": "Company commander position with search force",
+      "coordinates": [
+        11.0799,
+        7.8902
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:13:00.946Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "75c6c990-28ee-46e4-9745-db6396ab12e2",
+      "type": "enemy",
+      "name": "ZLF Early Warning",
+      "description": "Suspected enemy early warning position",
+      "coordinates": [
+        11.085,
+        7.893
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:13:00.946Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "aa2e3752-38fd-4bf6-8eff-fedf7f2a702a",
+      "type": "enemy",
+      "name": "ZLF Cache Site",
+      "description": "Suspected weapons cache location",
+      "coordinates": [
+        11.0792,
+        7.8912
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:13:00.947Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "d58580d0-d1eb-4552-9245-b44b7a6b4019",
+      "type": "route",
+      "name": "Route EAGLE",
+      "description": "Primary withdrawal route to FOB EAGLE",
+      "coordinates": [
+        [
+          11.082,
+          7.888
+        ],
+        [
+          11.075,
+          7.885
+        ],
+        [
+          11.065,
+          7.882
+        ],
+        [
+          11.055,
+          7.88
+        ]
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:13:00.948Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "786cf30a-00de-4f1a-9cf4-97ffa4bedbeb",
+      "type": "route",
+      "name": "Route FALCON",
+      "description": "Alternate withdrawal route via Market Street",
+      "coordinates": [
+        [
+          11.081,
+          7.894
+        ],
+        [
+          11.083,
+          7.896
+        ],
+        [
+          11.085,
+          7.898
+        ],
+        [
+          11.087,
+          7.9
+        ]
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:13:00.948Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "17269731-e5e7-4271-9967-dedfccee24bc",
+      "type": "boundary",
+      "name": "3rd PLT Search Boundary",
+      "description": "Search sector boundary for 3rd Platoon",
+      "coordinates": [
+        [
+          11.0785,
+          7.8885
+        ],
+        [
+          11.0815,
+          7.8885
+        ],
+        [
+          11.0815,
+          7.8925
+        ],
+        [
+          11.0785,
+          7.8925
+        ]
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:13:00.949Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "96221d6d-abe5-4312-9bfd-b168dce8d18f",
+      "type": "boundary",
+      "name": "WPN PLT Sector",
+      "description": "Weapons platoon sector of fire from water tower",
+      "coordinates": [
+        [
+          11.0825,
+          7.895
+        ],
+        [
+          11.084,
+          7.893
+        ],
+        [
+          11.082,
+          7.888
+        ],
+        [
+          11.078,
+          7.89
+        ]
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:13:00.949Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "5d4bfb9a-b836-483f-8366-da9848cfeb3a",
+      "type": "obstacle",
+      "name": "Factory Perimeter Wall",
+      "description": "Concrete perimeter wall around factory complex",
+      "coordinates": [
+        [
+          11.0785,
+          7.8905
+        ],
+        [
+          11.081,
+          7.8905
+        ],
+        [
+          11.081,
+          7.8895
+        ],
+        [
+          11.0785,
+          7.8895
+        ]
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:13:00.950Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "411083e5-5ead-4cd9-8fa7-65f2b753675e",
+      "type": "obstacle",
+      "name": "Suspected IED Site Alpha",
+      "description": "Reported IED location on MSR LION",
+      "coordinates": [
+        [
+          11.078,
+          7.8878
+        ],
+        [
+          11.0782,
+          7.8878
+        ]
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:13:00.951Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "8d9d8053-6be4-41e6-ae48-a9cf7466ef1a",
+      "type": "nai",
+      "name": "NAI 11 — Warehouse Loading Bay",
+      "description": "Key observation point for enemy activity",
+      "coordinates": [
+        11.0786,
+        7.891
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:13:00.951Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "5fa78fa3-8ba9-4cde-be5d-f9792d7aa14a",
+      "type": "nai",
+      "name": "NAI 12 — Water Pipeline",
+      "description": "Possible infiltration route",
+      "coordinates": [
+        11.084,
+        7.8885
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:13:00.952Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "78c9298b-a889-4bd3-bc66-d59c361ab7e9",
+      "type": "nai",
+      "name": "NAI 13 — Drainage Outlet",
+      "description": "Potential enemy escape route",
+      "coordinates": [
+        11.0775,
+        7.8925
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:13:00.952Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "66cf993c-23ba-42c7-832f-34769cfa83f6",
+      "type": "rally-point",
+      "name": "ORP ECHO",
+      "description": "Objective rally point for consolidation",
+      "coordinates": [
+        11.0788,
+        7.8888
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:13:00.953Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "d755cc23-4095-4e76-867b-ee3d993db5be",
+      "type": "rally-point",
+      "name": "LZ HAWK",
+      "description": "Landing zone for CASEVAC operations",
+      "coordinates": [
+        11.0765,
+        7.886
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:13:00.954Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "9d313888-3f20-49e3-be2d-70061e260c54",
+      "type": "rally-point",
+      "name": "RV POINT ALPHA",
+      "description": "Rendezvous point for phase transition",
+      "coordinates": [
+        11.081,
+        7.8883
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:13:00.955Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "222a2c46-efd4-41f5-9371-22ed7fdcbb7d",
+      "type": "phase-line",
+      "name": "PL CRIMSON",
+      "description": "Northern limit of search area",
+      "coordinates": [
+        [
+          11.081,
+          7.893
+        ],
+        [
+          11.081,
+          7.888
+        ]
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:13:23.347Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "2ef8edf1-777b-4e73-9a43-bd0f2741aa52",
+      "type": "phase-line",
+      "name": "PL INDIGO",
+      "description": "Eastern boundary of industrial district",
+      "coordinates": [
+        [
+          11.085,
+          7.892
+        ],
+        [
+          11.078,
+          7.892
+        ]
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:13:23.348Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "f4be31f9-1fb7-479b-b706-fa681de9d429",
+      "type": "objective",
+      "name": "OBJ COPPER",
+      "description": "Secondary factory building",
+      "coordinates": [
+        11.0805,
+        7.8892
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:13:23.349Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "c106f471-ae63-48e4-978a-06fbe7157e40",
+      "type": "objective",
+      "name": "OBJ BRONZE",
+      "description": "Factory administration building",
+      "coordinates": [
+        11.0785,
+        7.8915
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:13:23.350Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "a2a537cd-5d1c-468a-93ba-73e708a886b6",
+      "type": "friendly",
+      "name": "Forward Observer Team",
+      "description": "Mortar FO with 3rd PLT",
+      "coordinates": [
+        11.0798,
+        7.8898
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:13:23.350Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "a17efe78-4be8-40e8-b5c3-063f003e1aa1",
+      "type": "friendly",
+      "name": "Sniper Team Alpha",
+      "description": "Overwatch from rooftop",
+      "coordinates": [
+        11.0825,
+        7.8915
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:13:23.351Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "c5ee65dc-90fb-4696-9c8b-5387b5fd3300",
+      "type": "friendly",
+      "name": "QRF Staging",
+      "description": "Bravo Company staging area",
+      "coordinates": [
+        11.075,
+        7.884
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:13:23.351Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "7317eaaf-bb84-461c-93f3-5b9e00f12a5c",
+      "type": "enemy",
+      "name": "ZLF IED Team",
+      "description": "Suspected IED emplacer cell",
+      "coordinates": [
+        11.076,
+        7.8895
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:13:23.352Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "19cd4135-0085-4c79-a265-304014471724",
+      "type": "enemy",
+      "name": "ZLF Tunnel Exit",
+      "description": "Reported tunnel system exit",
+      "coordinates": [
+        11.0808,
+        7.8885
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:13:23.353Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "a0732168-5a9e-4793-b75d-8fd4f05187be",
+      "type": "route",
+      "name": "Route VIPER",
+      "description": "Alternate withdrawal route west",
+      "coordinates": [
+        [
+          11.082,
+          7.888
+        ],
+        [
+          11.078,
+          7.887
+        ],
+        [
+          11.074,
+          7.885
+        ],
+        [
+          11.07,
+          7.883
+        ]
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:13:23.354Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "f751d0f1-e027-433e-9d64-3e9c07e560e9",
+      "type": "route",
+      "name": "Route PYTHON",
+      "description": "NPF approach route from north",
+      "coordinates": [
+        [
+          11.085,
+          7.898
+        ],
+        [
+          11.083,
+          7.895
+        ],
+        [
+          11.081,
+          7.893
+        ],
+        [
+          11.08,
+          7.891
+        ]
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:13:23.355Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "61d58d8a-821f-4c60-ba9c-530a2d629260",
+      "type": "boundary",
+      "name": "MI Team Search Sector",
+      "description": "Intelligence team screening area",
+      "coordinates": [
+        [
+          11.078,
+          7.8895
+        ],
+        [
+          11.082,
+          7.8895
+        ],
+        [
+          11.082,
+          7.892
+        ],
+        [
+          11.078,
+          7.892
+        ]
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:13:23.355Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "0b1545e0-6681-47dc-989e-22c7088b19d6",
+      "type": "boundary",
+      "name": "Engineer Breach Zone",
+      "description": "Engineer responsibility area",
+      "coordinates": [
+        [
+          11.0795,
+          7.8905
+        ],
+        [
+          11.0815,
+          7.8905
+        ],
+        [
+          11.0815,
+          7.8915
+        ],
+        [
+          11.0795,
+          7.8915
+        ]
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:13:23.356Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "ef4a2ea8-c6bc-41d1-a6cc-f603b98b63c7",
+      "type": "obstacle",
+      "name": "Factory Security Wall",
+      "description": "Reinforced perimeter wall",
+      "coordinates": [
+        [
+          11.0785,
+          7.8915
+        ],
+        [
+          11.0815,
+          7.8915
+        ],
+        [
+          11.0815,
+          7.8885
+        ],
+        [
+          11.0785,
+          7.8885
+        ]
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:13:23.357Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "c59b4b6f-0197-4198-a2e4-df5420c94bbe",
+      "type": "obstacle",
+      "name": "Suspected IED Site Bravo",
+      "description": "Reported IED location MSR LION",
+      "coordinates": [
+        [
+          11.076,
+          7.8885
+        ],
+        [
+          11.0765,
+          7.8885
+        ]
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:13:23.357Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "1b812e9c-1c52-4922-83f0-a2ffe4152652",
+      "type": "nai",
+      "name": "NAI 14 — Mosque Courtyard",
+      "description": "Central Mosque observation point",
+      "coordinates": [
+        11.076,
+        7.8945
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:13:23.358Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "e2ca8322-3076-4554-ac5f-418011f3edd1",
+      "type": "nai",
+      "name": "NAI 15 — Hospital Route Junction",
+      "description": "CASEVAC route monitoring",
+      "coordinates": [
+        11.0785,
+        7.8865
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:13:23.359Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "755fbf25-b8dc-4465-b0e2-9d842120ce8a",
+      "type": "nai",
+      "name": "NAI 16 — Market Street Checkpoint",
+      "description": "NPF checkpoint location",
+      "coordinates": [
+        11.0835,
+        7.8935
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:13:23.359Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "46605a2c-2faa-4761-b5d7-78001b0fbd66",
+      "type": "rally-point",
+      "name": "ORP FOXTROT",
+      "description": "Final rally point before assault",
+      "coordinates": [
+        11.0775,
+        7.8895
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:13:23.360Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "83fe44f0-abd3-4b14-bc15-875f05ace0fa",
+      "type": "rally-point",
+      "name": "CCP KANO",
+      "description": "Casualty collection point",
+      "coordinates": [
+        11.077,
+        7.888
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:13:23.360Z",
+      "createdBy": "ai-auto",
+      "visible": true
+    },
+    {
+      "id": "f92f12ee-628b-4d5d-9604-2f631a76620c",
+      "type": "rally-point",
+      "name": "EPW Processing Site",
+      "description": "Detainee screening location",
+      "coordinates": [
+        11.0822,
+        7.8885
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T16:13:23.361Z",
+      "createdBy": "ai-auto",
       "visible": true
     }
   ],

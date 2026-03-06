@@ -1,4 +1,38 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect, useMemo } from 'react'
+
+/** Lightweight markdown → HTML for chat messages */
+function renderMarkdown(text: string): string {
+  let html = text
+    // Code blocks first (preserve content)
+    .replace(/```(\w*)\n([\s\S]*?)```/g, '<pre><code>$2</code></pre>')
+    // Inline code
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    // Headers
+    .replace(/^#### (.+)$/gm, '<h4>$1</h4>')
+    .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+    .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+    .replace(/^# (.+)$/gm, '<h1>$1</h1>')
+    // Bold + italic
+    .replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    // Horizontal rules
+    .replace(/^---+$/gm, '<hr/>')
+    // Unordered lists
+    .replace(/^- (.+)$/gm, '<li>$1</li>')
+    // Ordered lists  
+    .replace(/^\d+\. (.+)$/gm, '<li>$1</li>')
+    // Wrap consecutive <li> in <ul>
+    .replace(/((?:<li>.*<\/li>\n?)+)/g, '<ul>$1</ul>')
+    // Blockquotes
+    .replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>')
+    // Paragraphs — wrap remaining lines that aren't already wrapped in tags
+    .replace(/^(?!<[a-z])((?!\s*$).+)$/gm, '<p>$1</p>')
+    // Clean up empty paragraphs
+    .replace(/<p>\s*<\/p>/g, '')
+
+  return html
+}
 
 interface Message {
   id: string
@@ -137,7 +171,11 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                   </button>
                 )}
               </div>
-              <div className="message-content">{msg.content}</div>
+              <div className="message-content"
+                dangerouslySetInnerHTML={msg.isOperator ? undefined : { __html: renderMarkdown(msg.content) }}
+              >
+                {msg.isOperator ? msg.content : undefined}
+              </div>
             </div>
           ))
         )}

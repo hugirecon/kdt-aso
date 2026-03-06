@@ -77,6 +77,64 @@ const markerColors: Record<string, string> = {
   asset: '#8b5cf6',
 }
 
+/**
+ * MIL-STD-2525 / APP-6 tactical symbols as SVG
+ * Friendly = blue rectangle, Hostile = red diamond, Neutral = green square
+ * Objective = gold triangle, POI = green circle, Asset = purple pentagon
+ */
+function createTacticalSymbol(type: string, label: string): HTMLDivElement {
+  const color = markerColors[type] || markerColors.friendly
+  const el = document.createElement('div')
+  el.className = 'kdt-marker'
+  
+  let svgShape = ''
+  const size = 32
+  const s = size
+  
+  switch (type) {
+    case 'friendly':
+      // MIL-STD: Blue rectangle (friendly unit)
+      svgShape = `<rect x="2" y="8" width="${s-4}" height="${s-16}" rx="2" fill="${color}22" stroke="${color}" stroke-width="2.5"/>`
+      break
+    case 'hostile':
+      // MIL-STD: Red diamond (hostile/enemy)
+      svgShape = `<polygon points="${s/2},2 ${s-2},${s/2} ${s/2},${s-2} 2,${s/2}" fill="${color}22" stroke="${color}" stroke-width="2.5"/>`
+      break
+    case 'objective':
+      // Objective: Gold/amber inverted triangle
+      svgShape = `<polygon points="${s/2},${s-4} ${s-3},4 3,4" fill="${color}33" stroke="${color}" stroke-width="2.5"/>`
+      break
+    case 'neutral':
+      // MIL-STD: Green square (neutral/NAI)
+      svgShape = `<rect x="4" y="4" width="${s-8}" height="${s-8}" fill="${color}22" stroke="${color}" stroke-width="2"/>`
+      break
+    case 'poi':
+      // Rally point: Green circle with dot
+      svgShape = `<circle cx="${s/2}" cy="${s/2}" r="${s/2-3}" fill="${color}22" stroke="${color}" stroke-width="2.5"/>
+        <circle cx="${s/2}" cy="${s/2}" r="3" fill="${color}"/>`
+      break
+    case 'asset':
+      // Asset: Purple pentagon
+      const r = s/2 - 3
+      const cx = s/2, cy = s/2
+      const pts = Array.from({length: 5}, (_, i) => {
+        const a = (i * 72 - 90) * Math.PI / 180
+        return `${cx + r * Math.cos(a)},${cy + r * Math.sin(a)}`
+      }).join(' ')
+      svgShape = `<polygon points="${pts}" fill="${color}22" stroke="${color}" stroke-width="2"/>`
+      break
+    default:
+      svgShape = `<circle cx="${s/2}" cy="${s/2}" r="${s/2-3}" fill="${color}22" stroke="${color}" stroke-width="2.5"/>`
+  }
+
+  el.innerHTML = `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0 0 4px ${color}80);">${svgShape}</svg>`
+  el.style.cssText = `cursor: pointer; transition: transform 0.15s;`
+  el.onmouseenter = () => { el.style.transform = 'scale(1.3)' }
+  el.onmouseleave = () => { el.style.transform = 'scale(1)' }
+  
+  return el
+}
+
 const areaStyles: Record<string, { color: string; opacity: number }> = {
   aoi: { color: '#3b82f6', opacity: 0.2 },
   restricted: { color: '#ef4444', opacity: 0.3 },
@@ -378,19 +436,7 @@ const MapDisplay: React.FC<MapDisplayProps> = ({
 
     markers.forEach((marker) => {
       const color = markerColors[marker.type] || markerColors.friendly
-      const el = document.createElement('div')
-      el.className = 'kdt-marker'
-      el.style.cssText = `
-        width: 20px; height: 20px;
-        background: ${color};
-        border: 2px solid rgba(255,255,255,0.9);
-        border-radius: 50%;
-        cursor: pointer;
-        box-shadow: 0 0 8px ${color}80, 0 0 16px ${color}40;
-        transition: width 0.2s, height 0.2s, box-shadow 0.2s;
-      `
-      el.onmouseenter = () => { el.style.width = '26px'; el.style.height = '26px'; el.style.boxShadow = `0 0 12px ${color}, 0 0 24px ${color}80` }
-      el.onmouseleave = () => { el.style.width = '20px'; el.style.height = '20px'; el.style.boxShadow = `0 0 8px ${color}80, 0 0 16px ${color}40` }
+      const el = createTacticalSymbol(marker.type, marker.label)
 
       const popup = new maplibregl.Popup({ offset: 14, closeButton: true, closeOnClick: false, className: 'kdt-popup' })
         .setHTML(`

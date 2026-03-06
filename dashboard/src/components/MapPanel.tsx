@@ -391,10 +391,11 @@ const MapPanel: React.FC<MapPanelProps> = ({ socket, expanded = false, onToggleE
       )}
       
       <div className="map-legend">
-        <span className="legend-item"><span className="dot friendly"></span> Friendly</span>
-        <span className="legend-item"><span className="dot hostile"></span> Hostile</span>
-        <span className="legend-item"><span className="dot objective"></span> Objective</span>
-        <span className="legend-item"><span className="dot poi"></span> POI</span>
+        <span className="legend-item"><svg width="14" height="14"><rect x="1" y="3" width="12" height="8" rx="1" fill="none" stroke="#3b82f6" strokeWidth="2"/></svg> Friendly</span>
+        <span className="legend-item"><svg width="14" height="14"><polygon points="7,1 13,7 7,13 1,7" fill="none" stroke="#ef4444" strokeWidth="2"/></svg> Hostile</span>
+        <span className="legend-item"><svg width="14" height="14"><polygon points="7,12 12,3 2,3" fill="none" stroke="#f59e0b" strokeWidth="2"/></svg> Objective</span>
+        <span className="legend-item"><svg width="14" height="14"><circle cx="7" cy="7" r="5" fill="none" stroke="#22c55e" strokeWidth="2"/></svg> Rally Pt</span>
+        <span className="legend-item"><svg width="14" height="14"><rect x="2" y="2" width="10" height="10" fill="none" stroke="#6b7280" strokeWidth="2"/></svg> NAI</span>
       </div>
     </div>
   )
