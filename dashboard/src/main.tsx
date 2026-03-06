@@ -6,3 +6,8 @@ import './styles/global.css'
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <App />
 )
+
+// Register tile cache service worker
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/tile-cache-sw.js').catch(() => {})
+}

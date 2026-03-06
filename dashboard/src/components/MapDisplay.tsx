@@ -271,6 +271,10 @@ const MapDisplay: React.FC<MapDisplayProps> = ({
 
         if (!mapContainerRef.current || cancelled) return
 
+        // Nigeria + neighbors + surrounding water
+        // W: ~-5 (Atlantic/Ghana), E: ~20 (Chad/Cameroon), S: ~0 (Gulf of Guinea), N: ~18 (Niger/Chad)
+        const BOUNDS: [[number, number], [number, number]] = [[-5, 0], [20, 18]]
+
         const map = new maplibregl.Map({
           container: mapContainerRef.current,
           style: style!,
@@ -278,7 +282,8 @@ const MapDisplay: React.FC<MapDisplayProps> = ({
           zoom,
           attributionControl: false,
           maxZoom: 18,
-          minZoom: 2,
+          minZoom: 4,
+          maxBounds: BOUNDS,
         })
 
         if (onMapClick) {
