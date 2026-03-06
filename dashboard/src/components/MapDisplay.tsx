@@ -127,10 +127,8 @@ function createTacticalSymbol(type: string, label: string): HTMLDivElement {
       svgShape = `<circle cx="${s/2}" cy="${s/2}" r="${s/2-3}" fill="${color}22" stroke="${color}" stroke-width="2.5"/>`
   }
 
-  el.innerHTML = `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0 0 4px ${color}80);">${svgShape}</svg>`
-  el.style.cssText = `cursor: pointer; transition: transform 0.15s;`
-  el.onmouseenter = () => { el.style.transform = 'scale(1.3)' }
-  el.onmouseleave = () => { el.style.transform = 'scale(1)' }
+  el.innerHTML = `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0 0 4px ${color}80); display: block;">${svgShape}</svg>`
+  el.style.cssText = `width: ${size}px; height: ${size}px; cursor: pointer;`
   
   return el
 }
@@ -221,56 +219,36 @@ const MapDisplay: React.FC<MapDisplayProps> = ({
       if (cancelled) return
 
       try {
+        const MAPTILER_KEY = '0annVpAwdNB2txEpevo0'
         let style: maplibregl.StyleSpecification | string
 
-        if (hasLocalTiles) {
-          // Build protomaps dark style from local PMTiles
-          style = {
-            version: 8,
-            glyphs: 'https://protomaps.github.io/basemaps-assets/fonts/{fontstack}/{range}.pbf',
-            sprite: 'https://protomaps.github.io/basemaps-assets/sprites/v4/dark',
-            sources: {
-              protomaps: {
-                type: 'vector',
-                url: `pmtiles://${localUrl}`,
-                attribution: '© <a href="https://openstreetmap.org">OpenStreetMap</a>',
+        // Primary: MapTiler Satellite Hybrid (satellite imagery + labels)
+        style = `https://api.maptiler.com/maps/hybrid/style.json?key=${MAPTILER_KEY}`
+        console.log('[MAP] Using tile source: MapTiler Satellite Hybrid')
+
+        // If MapTiler fails, fallback chain
+        const testRes = await fetch(`https://api.maptiler.com/maps/hybrid/style.json?key=${MAPTILER_KEY}`)
+        if (!testRes.ok) {
+          console.warn('[MAP] MapTiler unavailable, trying fallbacks...')
+
+          if (hasLocalTiles) {
+            style = {
+              version: 8,
+              glyphs: 'https://protomaps.github.io/basemaps-assets/fonts/{fontstack}/{range}.pbf',
+              sprite: 'https://protomaps.github.io/basemaps-assets/sprites/v4/dark',
+              sources: {
+                protomaps: {
+                  type: 'vector',
+                  url: `pmtiles://${localUrl}`,
+                  attribution: '© <a href="https://openstreetmap.org">OpenStreetMap</a>',
+                },
               },
-            },
-            layers: layers('protomaps', namedFlavor('dark'), { lang: 'en' }),
-          }
-          console.log('[MAP] Using tile source: local PMTiles')
-        } else {
-          // Fallback chain: try free tile providers
-          console.log('[MAP] No local PMTiles, trying free tile providers...')
-          let loaded = false
-
-          // Try CARTO dark matter (fully free, no API key required)
-          if (!loaded) {
-            try {
-              const cartoRes = await fetch('https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json')
-              if (cartoRes.ok) {
-                style = await cartoRes.json()
-                console.log('[MAP] Using tile source: CARTO Dark Matter')
-                loaded = true
-              }
-            } catch { /* CARTO unavailable */ }
-          }
-
-          // Try Stadia Maps dark style (free for localhost)
-          if (!loaded) {
-            try {
-              const stadiaRes = await fetch('https://tiles.stadiamaps.com/styles/alidade_smooth_dark.json')
-              if (stadiaRes.ok) {
-                style = await stadiaRes.json()
-                console.log('[MAP] Using tile source: Stadia Maps')
-                loaded = true
-              }
-            } catch { /* Stadia unavailable */ }
-          }
-
-          // Ultimate fallback: OSM raster tiles with dark filter
-          if (!loaded) {
-            console.log('[MAP] Using tile source: OSM raster fallback (dark filter)')
+              layers: layers('protomaps', namedFlavor('dark'), { lang: 'en' }),
+            }
+            console.log('[MAP] Fallback: local PMTiles')
+          } else {
+            // Ultimate fallback: OSM raster tiles with dark filter
+            console.log('[MAP] Fallback: OSM raster (dark filter)')
             style = {
               version: 8 as const,
               sources: {
@@ -289,7 +267,7 @@ const MapDisplay: React.FC<MapDisplayProps> = ({
               }],
             }
           }
-        }
+        } // end MapTiler fallback
 
         if (!mapContainerRef.current || cancelled) return
 
