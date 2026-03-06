@@ -10,7 +10,7 @@ interface AgentPanelProps {
   agents: Record<string, Agent>
 }
 
-const sectionOrder = ['hero', 'operations', 'geospatial', 'surveillance', 'communications', 'logistics', 'admin']
+const sectionOrder = ['operations', 'hero', 'geospatial', 'surveillance', 'communications', 'logistics', 'admin']
 const sectionLabels: Record<string, string> = {
   hero: 'KDT Hero — Intelligence',
   operations: 'Operations',

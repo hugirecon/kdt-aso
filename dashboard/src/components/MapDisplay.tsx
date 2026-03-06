@@ -1,14 +1,36 @@
-import React, { useEffect, useRef } from 'react'
-import L from 'leaflet'
-import 'leaflet/dist/leaflet.css'
+import React, { useEffect, useRef, useState, Component, ErrorInfo, ReactNode } from 'react'
+import maplibregl from 'maplibre-gl'
+import 'maplibre-gl/dist/maplibre-gl.css'
+import { Protocol } from 'pmtiles'
+import { layers, namedFlavor } from '@protomaps/basemaps'
 
-// Fix default marker icon
-delete (L.Icon.Default.prototype as any)._getIconUrl
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
-})
+// Error Boundary to prevent map crashes from killing the app
+interface ErrorBoundaryState { hasError: boolean; error: string | null }
+class MapErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryState> {
+  state: ErrorBoundaryState = { hasError: false, error: null }
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error: error.message }
+  }
+  componentDidCatch(error: Error, info: ErrorInfo) {
+    console.error('[MAP] Error boundary caught:', error, info)
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{
+          height: '100%', width: '100%', minHeight: '400px',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          background: '#0a0a0f', color: '#a0a0b0', flexDirection: 'column', gap: '8px'
+        }}>
+          <div style={{ fontSize: '24px' }}>🗺️</div>
+          <div>Map rendering error</div>
+          <div style={{ fontSize: '12px', color: '#606070' }}>{this.state.error}</div>
+        </div>
+      )
+    }
+    return this.props.children
+  }
+}
 
 export interface MapMarker {
   id: string
@@ -23,6 +45,8 @@ export interface MapArea {
   positions: [number, number][]
   type: 'aoi' | 'restricted' | 'safe' | 'patrol'
   label: string
+  /** If true, render as a LineString instead of a closed Polygon */
+  isLine?: boolean
 }
 
 export interface MapCircle {
@@ -40,29 +64,56 @@ interface MapDisplayProps {
   areas?: MapArea[]
   circles?: MapCircle[]
   onMarkerClick?: (marker: MapMarker) => void
+  onMapClick?: (lat: number, lng: number) => void
   className?: string
 }
 
 const markerColors: Record<string, string> = {
-  friendly: 'blue',
-  hostile: 'red',
-  neutral: 'grey',
-  objective: 'gold',
-  poi: 'green',
-  asset: 'violet',
+  friendly: '#3b82f6',
+  hostile: '#ef4444',
+  neutral: '#6b7280',
+  objective: '#f59e0b',
+  poi: '#22c55e',
+  asset: '#8b5cf6',
 }
 
-const areaColors: Record<string, { color: string; fillOpacity: number }> = {
-  aoi: { color: '#3388ff', fillOpacity: 0.2 },
-  restricted: { color: '#ff3333', fillOpacity: 0.3 },
-  safe: { color: '#33ff33', fillOpacity: 0.2 },
-  patrol: { color: '#ffaa00', fillOpacity: 0.15 },
+const areaStyles: Record<string, { color: string; opacity: number }> = {
+  aoi: { color: '#3b82f6', opacity: 0.2 },
+  restricted: { color: '#ef4444', opacity: 0.3 },
+  safe: { color: '#22c55e', opacity: 0.2 },
+  patrol: { color: '#f59e0b', opacity: 0.15 },
 }
 
-const circleColors: Record<string, { color: string; fillOpacity: number }> = {
-  range: { color: '#3388ff', fillOpacity: 0.1 },
-  blast: { color: '#ff3333', fillOpacity: 0.2 },
-  coverage: { color: '#33ff33', fillOpacity: 0.15 },
+const circleStyles: Record<string, { color: string; opacity: number }> = {
+  range: { color: '#3b82f6', opacity: 0.1 },
+  blast: { color: '#ef4444', opacity: 0.2 },
+  coverage: { color: '#22c55e', opacity: 0.15 },
+}
+
+// Register PMTiles protocol once
+let protocolRegistered = false
+
+// Detect if a local PMTiles file is valid by checking the first response
+async function checkLocalTiles(url: string): Promise<boolean> {
+  try {
+    const res = await fetch(url, { headers: { Range: 'bytes=0-6' } })
+    if (!res.ok) return false
+    const buf = await res.arrayBuffer()
+    const bytes = new Uint8Array(buf)
+    // PMTiles v3 magic: first 2 bytes are 0x50 0x4D ('PM')
+    return bytes[0] === 0x50 && bytes[1] === 0x4D
+  } catch {
+    return false
+  }
+}
+
+function isWebGLSupported(): boolean {
+  try {
+    const canvas = document.createElement('canvas')
+    return !!(canvas.getContext('webgl') || canvas.getContext('webgl2') || canvas.getContext('experimental-webgl'))
+  } catch {
+    return false
+  }
 }
 
 const MapDisplay: React.FC<MapDisplayProps> = ({
@@ -72,109 +123,389 @@ const MapDisplay: React.FC<MapDisplayProps> = ({
   areas = [],
   circles = [],
   onMarkerClick,
-  className = ''
+  onMapClick,
+  className = '',
 }) => {
-  const mapRef = useRef<HTMLDivElement>(null)
-  const mapInstanceRef = useRef<L.Map | null>(null)
-  const markersLayerRef = useRef<L.LayerGroup | null>(null)
-  const areasLayerRef = useRef<L.LayerGroup | null>(null)
-  const circlesLayerRef = useRef<L.LayerGroup | null>(null)
+  const mapContainerRef = useRef<HTMLDivElement>(null)
+  const mapRef = useRef<maplibregl.Map | null>(null)
+  const markersRef = useRef<maplibregl.Marker[]>([])
+  const popupsRef = useRef<maplibregl.Popup[]>([])
+  const [webglSupported] = useState(() => isWebGLSupported())
+  const [mapLoaded, setMapLoaded] = useState(false)
+  const [mapError, setMapError] = useState<string | null>(null)
 
-  // Initialize map
+  // Register PMTiles protocol
   useEffect(() => {
-    if (!mapRef.current || mapInstanceRef.current) return
-
-    const map = L.map(mapRef.current).setView(center, zoom)
-    
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-    }).addTo(map)
-
-    markersLayerRef.current = L.layerGroup().addTo(map)
-    areasLayerRef.current = L.layerGroup().addTo(map)
-    circlesLayerRef.current = L.layerGroup().addTo(map)
-    
-    mapInstanceRef.current = map
-
-    return () => {
-      map.remove()
-      mapInstanceRef.current = null
+    if (!protocolRegistered) {
+      try {
+        const protocol = new Protocol()
+        maplibregl.addProtocol('pmtiles', protocol.tile)
+        protocolRegistered = true
+      } catch (err) {
+        console.error('[MAP] Failed to register PMTiles protocol:', err)
+      }
     }
   }, [])
 
-  // Update center
+  // Initialize map
   useEffect(() => {
-    if (mapInstanceRef.current) {
-      mapInstanceRef.current.setView(center, zoom)
+    if (!mapContainerRef.current || mapRef.current || !webglSupported) return
+
+    let cancelled = false
+
+    const initMap = async () => {
+      if (!mapContainerRef.current || cancelled) return
+
+      // Determine tile source: try local PMTiles first, then free tile providers
+      const localUrl = `${window.location.origin}/tiles/nigeria.pmtiles`
+      const hasLocalTiles = await checkLocalTiles(localUrl)
+
+      if (cancelled) return
+
+      try {
+        let style: maplibregl.StyleSpecification | string
+
+        if (hasLocalTiles) {
+          // Build protomaps dark style from local PMTiles
+          style = {
+            version: 8,
+            glyphs: 'https://protomaps.github.io/basemaps-assets/fonts/{fontstack}/{range}.pbf',
+            sprite: 'https://protomaps.github.io/basemaps-assets/sprites/v4/dark',
+            sources: {
+              protomaps: {
+                type: 'vector',
+                url: `pmtiles://${localUrl}`,
+                attribution: '© <a href="https://openstreetmap.org">OpenStreetMap</a>',
+              },
+            },
+            layers: layers('protomaps', namedFlavor('dark'), { lang: 'en' }),
+          }
+          console.log('[MAP] Using tile source: local PMTiles')
+        } else {
+          // Fallback chain: try free tile providers
+          console.log('[MAP] No local PMTiles, trying free tile providers...')
+          let loaded = false
+
+          // Try CARTO dark matter (fully free, no API key required)
+          if (!loaded) {
+            try {
+              const cartoRes = await fetch('https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json')
+              if (cartoRes.ok) {
+                style = await cartoRes.json()
+                console.log('[MAP] Using tile source: CARTO Dark Matter')
+                loaded = true
+              }
+            } catch { /* CARTO unavailable */ }
+          }
+
+          // Try Stadia Maps dark style (free for localhost)
+          if (!loaded) {
+            try {
+              const stadiaRes = await fetch('https://tiles.stadiamaps.com/styles/alidade_smooth_dark.json')
+              if (stadiaRes.ok) {
+                style = await stadiaRes.json()
+                console.log('[MAP] Using tile source: Stadia Maps')
+                loaded = true
+              }
+            } catch { /* Stadia unavailable */ }
+          }
+
+          // Ultimate fallback: OSM raster tiles with dark filter
+          if (!loaded) {
+            console.log('[MAP] Using tile source: OSM raster fallback (dark filter)')
+            style = {
+              version: 8 as const,
+              sources: {
+                osm: {
+                  type: 'raster' as const,
+                  tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+                  tileSize: 256,
+                  attribution: '© <a href="https://openstreetmap.org">OpenStreetMap</a>',
+                },
+              },
+              layers: [{
+                id: 'osm-tiles',
+                type: 'raster' as const,
+                source: 'osm',
+                paint: { 'raster-brightness-max': 0.35, 'raster-saturation': -0.5, 'raster-contrast': 0.3 },
+              }],
+            }
+          }
+        }
+
+        if (!mapContainerRef.current || cancelled) return
+
+        const map = new maplibregl.Map({
+          container: mapContainerRef.current,
+          style: style!,
+          center: [center[1], center[0]],
+          zoom,
+          attributionControl: false,
+          maxZoom: 18,
+          minZoom: 2,
+        })
+
+        if (onMapClick) {
+          map.on('click', (e) => onMapClick(e.lngLat.lat, e.lngLat.lng))
+        }
+
+        map.on('error', (e) => {
+          console.error('[MAP] MapLibre error:', e.error?.message || e)
+        })
+
+        map.on('load', () => {
+          setMapLoaded(true)
+
+          // Add controls AFTER map load (required for maplibre-gl v5+)
+          try {
+            map.addControl(new maplibregl.AttributionControl({ compact: true }), 'bottom-right')
+            map.addControl(new maplibregl.NavigationControl({ showCompass: true }), 'top-left')
+            map.addControl(new maplibregl.ScaleControl({ maxWidth: 150, unit: 'metric' }), 'bottom-left')
+          } catch (err) {
+            console.warn('[MAP] Controls failed (non-fatal):', err)
+          }
+
+          map.addSource('areas', {
+            type: 'geojson',
+            data: { type: 'FeatureCollection', features: [] },
+          })
+          map.addSource('lines', {
+            type: 'geojson',
+            data: { type: 'FeatureCollection', features: [] },
+          })
+          map.addSource('circles', {
+            type: 'geojson',
+            data: { type: 'FeatureCollection', features: [] },
+          })
+
+          // Polygon areas (AO boundaries, restricted zones)
+          map.addLayer({
+            id: 'areas-fill',
+            type: 'fill',
+            source: 'areas',
+            paint: { 'fill-color': ['get', 'color'], 'fill-opacity': ['get', 'opacity'] },
+          })
+          map.addLayer({
+            id: 'areas-outline',
+            type: 'line',
+            source: 'areas',
+            paint: { 'line-color': ['get', 'color'], 'line-width': 2, 'line-opacity': 0.8 },
+          })
+
+          // Tactical lines (phase lines, routes, boundaries)
+          map.addLayer({
+            id: 'lines-stroke',
+            type: 'line',
+            source: 'lines',
+            paint: {
+              'line-color': ['get', 'color'],
+              'line-width': ['get', 'lineWidth'],
+              'line-opacity': 0.85,
+              'line-dasharray': ['case',
+                ['==', ['get', 'dashed'], true], ['literal', [6, 3]],
+                ['literal', [1, 0]]
+              ],
+            },
+            layout: { 'line-cap': 'round', 'line-join': 'round' },
+          })
+          map.addLayer({
+            id: 'lines-labels',
+            type: 'symbol',
+            source: 'lines',
+            layout: {
+              'symbol-placement': 'line-center',
+              'text-field': ['get', 'label'],
+              'text-size': 11,
+              'text-allow-overlap': false,
+            },
+            paint: { 'text-color': '#e0e0f0', 'text-halo-color': '#0a0a0f', 'text-halo-width': 2 },
+          })
+
+          // Circles
+          map.addLayer({
+            id: 'circles-fill',
+            type: 'fill',
+            source: 'circles',
+            paint: { 'fill-color': ['get', 'color'], 'fill-opacity': ['get', 'opacity'] },
+          })
+          map.addLayer({
+            id: 'circles-outline',
+            type: 'line',
+            source: 'circles',
+            paint: { 'line-color': ['get', 'color'], 'line-width': 1.5, 'line-opacity': 0.6, 'line-dasharray': [4, 2] },
+          })
+          map.addLayer({
+            id: 'areas-labels',
+            type: 'symbol',
+            source: 'areas',
+            layout: { 'text-field': ['get', 'label'], 'text-size': 12 },
+            paint: { 'text-color': '#a0a0b0', 'text-halo-color': '#0a0a0f', 'text-halo-width': 2 },
+          })
+        })
+
+        mapRef.current = map
+      } catch (err: any) {
+        console.error('[MAP] Failed to initialize map:', err)
+        setMapError(err?.message || 'Map initialization failed')
+      }
+    }
+
+    initMap()
+
+    return () => { 
+      cancelled = true
+      if (mapRef.current) {
+        mapRef.current.remove()
+        mapRef.current = null
+      }
+    }
+  }, [])
+
+  // Update center/zoom
+  useEffect(() => {
+    if (mapRef.current) {
+      mapRef.current.flyTo({ center: [center[1], center[0]], zoom, duration: 1000 })
     }
   }, [center, zoom])
 
   // Update markers
   useEffect(() => {
-    if (!markersLayerRef.current) return
-    markersLayerRef.current.clearLayers()
+    if (!mapRef.current) return
+    markersRef.current.forEach((m) => m.remove())
+    markersRef.current = []
+    popupsRef.current.forEach((p) => p.remove())
+    popupsRef.current = []
 
-    markers.forEach(marker => {
-      const icon = L.icon({
-        iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-${markerColors[marker.type] || 'blue'}.png`,
-        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
-        iconSize: [25, 41],
-        iconAnchor: [12, 41],
-        popupAnchor: [1, -34],
-        shadowSize: [41, 41]
-      })
+    markers.forEach((marker) => {
+      const color = markerColors[marker.type] || markerColors.friendly
+      const el = document.createElement('div')
+      el.className = 'kdt-marker'
+      el.style.cssText = `
+        width: 20px; height: 20px;
+        background: ${color};
+        border: 2px solid rgba(255,255,255,0.9);
+        border-radius: 50%;
+        cursor: pointer;
+        box-shadow: 0 0 8px ${color}80, 0 0 16px ${color}40;
+        transition: width 0.2s, height 0.2s, box-shadow 0.2s;
+      `
+      el.onmouseenter = () => { el.style.width = '26px'; el.style.height = '26px'; el.style.boxShadow = `0 0 12px ${color}, 0 0 24px ${color}80` }
+      el.onmouseleave = () => { el.style.width = '20px'; el.style.height = '20px'; el.style.boxShadow = `0 0 8px ${color}80, 0 0 16px ${color}40` }
 
-      const m = L.marker(marker.position, { icon })
-        .bindPopup(`<strong>${marker.label}</strong>${marker.details ? `<p>${marker.details}</p>` : ''}`)
-      
-      if (onMarkerClick) {
-        m.on('click', () => onMarkerClick(marker))
-      }
-      
-      markersLayerRef.current?.addLayer(m)
+      const popup = new maplibregl.Popup({ offset: 14, closeButton: true, closeOnClick: false, className: 'kdt-popup' })
+        .setHTML(`
+          <div style="background:#14141e;color:#fff;padding:8px 12px;border-radius:6px;font-family:'Inter',sans-serif;font-size:13px;border:1px solid #2a2a35;min-width:120px;">
+            <div style="font-weight:600;margin-bottom:4px;color:${color};text-transform:uppercase;font-size:10px;letter-spacing:0.5px;">${marker.type}</div>
+            <div style="font-weight:500;">${marker.label}</div>
+            ${marker.details ? `<div style="color:#a0a0b0;margin-top:4px;font-size:12px;">${marker.details}</div>` : ''}
+            <div style="color:#606070;margin-top:4px;font-size:11px;font-family:monospace;">${marker.position[0].toFixed(6)}, ${marker.position[1].toFixed(6)}</div>
+          </div>
+        `)
+
+      const mapMarker = new maplibregl.Marker({ element: el })
+        .setLngLat([marker.position[1], marker.position[0]])
+        .setPopup(popup)
+        .addTo(mapRef.current!)
+
+      el.addEventListener('click', () => { if (onMarkerClick) onMarkerClick(marker) })
+      markersRef.current.push(mapMarker)
+      popupsRef.current.push(popup)
     })
   }, [markers, onMarkerClick])
 
-  // Update areas
-  useEffect(() => {
-    if (!areasLayerRef.current) return
-    areasLayerRef.current.clearLayers()
+  // Line styles for tactical overlays
+  const lineStyles: Record<string, { color: string; lineWidth: number; dashed: boolean }> = {
+    patrol: { color: '#f59e0b', lineWidth: 3, dashed: false },         // Phase lines - gold
+    aoi: { color: '#3b82f6', lineWidth: 2.5, dashed: true },           // Boundaries - blue dashed
+    safe: { color: '#22c55e', lineWidth: 2.5, dashed: false },         // Routes - green
+    restricted: { color: '#ef4444', lineWidth: 3, dashed: false },     // Obstacles - red
+  }
 
-    areas.forEach(area => {
-      const style = areaColors[area.type] || areaColors.aoi
-      L.polygon(area.positions, {
-        color: style.color,
-        fillColor: style.color,
-        fillOpacity: style.fillOpacity
+  // Update areas and lines
+  useEffect(() => {
+    if (!mapRef.current || !mapLoaded) return
+
+    // Separate lines from polygons
+    const polyAreas = areas.filter(a => !a.isLine)
+    const lineAreas = areas.filter(a => a.isLine)
+
+    const areaSource = mapRef.current.getSource('areas') as maplibregl.GeoJSONSource
+    if (areaSource) {
+      const features = polyAreas.map((area) => {
+        const style = areaStyles[area.type] || areaStyles.aoi
+        return {
+          type: 'Feature' as const,
+          properties: { id: area.id, label: area.label, color: style.color, opacity: style.opacity },
+          geometry: { type: 'Polygon' as const, coordinates: [area.positions.map(([lat, lng]) => [lng, lat])] },
+        }
       })
-        .bindPopup(area.label)
-        .addTo(areasLayerRef.current!)
-    })
-  }, [areas])
+      areaSource.setData({ type: 'FeatureCollection', features })
+    }
+
+    const lineSource = mapRef.current.getSource('lines') as maplibregl.GeoJSONSource
+    if (lineSource) {
+      const features = lineAreas.map((area) => {
+        const ls = lineStyles[area.type] || lineStyles.patrol
+        return {
+          type: 'Feature' as const,
+          properties: { id: area.id, label: area.label, color: ls.color, lineWidth: ls.lineWidth, dashed: ls.dashed },
+          geometry: { type: 'LineString' as const, coordinates: area.positions.map(([lat, lng]) => [lng, lat]) },
+        }
+      })
+      lineSource.setData({ type: 'FeatureCollection', features })
+    }
+  }, [areas, mapLoaded])
 
   // Update circles
   useEffect(() => {
-    if (!circlesLayerRef.current) return
-    circlesLayerRef.current.clearLayers()
-
-    circles.forEach(circle => {
-      const style = circleColors[circle.type] || circleColors.range
-      L.circle(circle.center, {
-        radius: circle.radius,
-        color: style.color,
-        fillColor: style.color,
-        fillOpacity: style.fillOpacity
-      })
-        .bindPopup(circle.label)
-        .addTo(circlesLayerRef.current!)
+    if (!mapRef.current || !mapLoaded) return
+    const source = mapRef.current.getSource('circles') as maplibregl.GeoJSONSource
+    if (!source) return
+    const features = circles.map((circle) => {
+      const style = circleStyles[circle.type] || circleStyles.range
+      const points = 64
+      const coords: [number, number][] = []
+      for (let i = 0; i <= points; i++) {
+        const angle = (i / points) * 2 * Math.PI
+        const dx = (circle.radius / 111320) * Math.cos(angle)
+        const dy = (circle.radius / (111320 * Math.cos((circle.center[0] * Math.PI) / 180))) * Math.sin(angle)
+        coords.push([circle.center[1] + dy, circle.center[0] + dx])
+      }
+      return {
+        type: 'Feature' as const,
+        properties: { id: circle.id, label: circle.label, color: style.color, opacity: style.opacity },
+        geometry: { type: 'Polygon' as const, coordinates: [coords] },
+      }
     })
-  }, [circles])
+    source.setData({ type: 'FeatureCollection', features })
+  }, [circles, mapLoaded])
+
+  if (!webglSupported || mapError) {
+    return (
+      <div className={`map-display ${className}`} style={{
+        height: '100%', width: '100%', minHeight: '400px',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        background: '#0a0a0f', color: '#a0a0b0', flexDirection: 'column', gap: '8px'
+      }}>
+        <div style={{ fontSize: '24px' }}>🗺️</div>
+        <div>{mapError || 'WebGL required for Operations Map'}</div>
+        <div style={{ fontSize: '12px', color: '#606070' }}>Use a WebGL-capable browser for the full map experience</div>
+      </div>
+    )
+  }
 
   return (
     <div className={`map-display ${className}`}>
-      <div ref={mapRef} style={{ height: '100%', width: '100%', minHeight: '400px' }} />
+      <div ref={mapContainerRef} style={{ height: '100%', width: '100%', minHeight: '400px' }} />
     </div>
   )
 }
 
-export default MapDisplay
+// Wrapped export with error boundary
+const MapDisplayWithBoundary: React.FC<MapDisplayProps> = (props) => (
+  <MapErrorBoundary>
+    <MapDisplay {...props} />
+  </MapErrorBoundary>
+)
+
+export default MapDisplayWithBoundary

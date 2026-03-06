@@ -1,0 +1,106 @@
+{
+  "id": "865ffb20-6944-4b00-bfe0-1e6c947034f2",
+  "name": "test mission",
+  "createdBy": "admin",
+  "createdAt": "2026-03-06T04:11:21.411Z",
+  "updatedAt": "2026-03-06T04:11:21.411Z",
+  "status": "planning",
+  "currentTlpStep": 1,
+  "mettTc": {},
+  "opord": {
+    "classification": "",
+    "dtg": "",
+    "unit": "",
+    "opord_number": "",
+    "references": [],
+    "timezone": "",
+    "paragraph_1_situation": {
+      "area_of_operations": {
+        "terrain": "",
+        "weather": ""
+      },
+      "enemy_forces": {
+        "composition": "",
+        "disposition": "",
+        "strength": "",
+        "capabilities": "",
+        "enemy_coa": ""
+      },
+      "friendly_forces": {
+        "higher_mission": "",
+        "higher_intent": "",
+        "adjacent_units": "",
+        "supporting_units": ""
+      },
+      "civil_considerations": "",
+      "attachments_detachments": [],
+      "assumptions": []
+    },
+    "paragraph_2_mission": {
+      "who": "",
+      "what": "",
+      "when": "",
+      "where": "",
+      "why": "",
+      "mission_statement": ""
+    },
+    "paragraph_3_execution": {
+      "commander_intent": {
+        "purpose": "",
+        "key_tasks": [],
+        "end_state": ""
+      },
+      "concept_of_operations": {
+        "scheme_of_maneuver": "",
+        "fires": "",
+        "phases": []
+      },
+      "tasks_to_subordinate_units": [],
+      "coordinating_instructions": {
+        "timeline": [],
+        "rules_of_engagement": "",
+        "risk_mitigation": [],
+        "phase_lines": [],
+        "objectives": [],
+        "rally_points": [],
+        "actions_on_contact": "",
+        "actions_on_objective": "",
+        "consolidation_reorganization": ""
+      }
+    },
+    "paragraph_4_sustainment": {
+      "logistics": {
+        "supply": "",
+        "transportation": "",
+        "maintenance": ""
+      },
+      "personnel": {
+        "medical": "",
+        "casualty_evacuation": "",
+        "personnel_replacement": ""
+      }
+    },
+    "paragraph_5_command_signal": {
+      "command": {
+        "location_commander": "",
+        "location_cp": "",
+        "succession_of_command": []
+      },
+      "signal": {
+        "primary_frequency": "",
+        "alternate_frequency": "",
+        "signals": [],
+        "passwords": "",
+        "code_words": []
+      }
+    },
+    "annexes": [],
+    "overlays": []
+  },
+  "mapOverlays": [],
+  "timeline": [],
+  "notes": [],
+  "aiRecommendations": [],
+  "taskings": [],
+  "incidents": []
+}

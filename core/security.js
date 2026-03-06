@@ -57,23 +57,7 @@ const sensitiveOpLimiter = rateLimit({
 // ============================================================
 
 const securityHeaders = helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'"],  // Dashboard needs inline scripts
-      styleSrc: ["'self'", "'unsafe-inline'", "https://unpkg.com"],  // Leaflet CSS
-      imgSrc: ["'self'", "data:", "https://*.tile.openstreetmap.org", "https://unpkg.com"],
-      connectSrc: ["'self'", "ws://localhost:*", "wss://localhost:*"],
-      fontSrc: ["'self'"],
-      objectSrc: ["'none'"],
-      mediaSrc: ["'self'"],
-      frameSrc: ["'none'"],
-      baseUri: ["'self'"],
-      formAction: ["'self'"],
-      frameAncestors: ["'none'"],
-      upgradeInsecureRequests: []
-    }
-  },
+  contentSecurityPolicy: false,  // Disabled for now — MapLibre GL needs broad access for tiles/workers/WebGL
   crossOriginEmbedderPolicy: false,  // Allow Leaflet tiles
   crossOriginOpenerPolicy: { policy: 'same-origin' },
   crossOriginResourcePolicy: { policy: 'same-site' },

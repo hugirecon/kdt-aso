@@ -10,9 +10,10 @@ interface HeaderProps {
   connected: boolean
   user?: User | null
   onLogout?: () => void
+  children?: React.ReactNode
 }
 
-const Header: React.FC<HeaderProps> = ({ connected, user, onLogout }) => {
+const Header: React.FC<HeaderProps> = ({ connected, user, onLogout, children }) => {
   return (
     <header className="header">
       <div className="header-brand">
@@ -21,6 +22,8 @@ const Header: React.FC<HeaderProps> = ({ connected, user, onLogout }) => {
       </div>
       
       <div className="header-right">
+        {children}
+        
         <div className="status-indicator">
           <span className={`status-dot ${connected ? 'online' : ''}`}></span>
           <span>{connected ? 'System Online' : 'Connecting...'}</span>

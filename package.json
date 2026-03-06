@@ -30,6 +30,7 @@
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.3",
     "socket.io": "^4.7.2",
+    "socket.io-client": "^4.8.3",
     "tar": "^7.5.9",
     "uuid": "^9.0.0",
     "yaml": "^2.3.4"

@@ -25,6 +25,10 @@ const PersistentMemory = require('./persistent-memory');
 const DocumentStorage = require('./documents');
 const BackupSystem = require('./backup');
 const EncryptionSystem = require('./encryption');
+const TileServer = require('./tile-server');
+const MissionPlanner = require('./mission-planner');
+const IncidentTracker = require('./incidents');
+const ShiftManager = require('./shifts');
 const {
   securityHeaders,
   apiLimiter,
@@ -61,6 +65,10 @@ const persistentMemory = new PersistentMemory('./memory');
 const documentStorage = new DocumentStorage('./documents');
 const backupSystem = new BackupSystem({ backupDir: './backups', dataDir: '.' });
 const encryptionSystem = new EncryptionSystem({ keyDir: './config/keys' });
+const tileServer = new TileServer(path.join(__dirname, '..', 'tiles'));
+const missionPlanner = new MissionPlanner();
+const incidentTracker = new IncidentTracker();
+const shiftManager = new ShiftManager();
 
 // Security systems
 const securityAudit = new SecurityAuditLog();
@@ -342,8 +350,20 @@ app.get('/api/auth/me', authMiddleware(authManager), (req, res) => {
   res.json({ user: req.user });
 });
 
+// Tile server routes (before auth — tiles are public)
+tileServer.init().catch(err => console.error('[TILES] Init error:', err));
+tileServer.registerRoutes(app);
+
 // Apply auth middleware to all protected API routes
 app.use('/api', authMiddleware(authManager));
+
+// Admin role check middleware (used on admin/encryption/security routes)
+const adminAuth = (req, res, next) => {
+  if (!req.user || req.user.role !== 'admin') {
+    return res.status(403).json({ error: 'Admin access required' });
+  }
+  next();
+};
 
 // Health check endpoint (for Docker/load balancers) — minimal info
 app.get('/api/health', (req, res) => {
@@ -709,11 +729,41 @@ io.on('connection', (socket) => {
   });
   
   socket.on('message', async (data) => {
-    const { message, language, voiceEnabled } = data;
+    try {
+    console.log('[CHAT] Message received:', JSON.stringify({ message: data.message?.substring(0, 50), missionId: data.missionId }));
+    const { message, language, voiceEnabled, missionId } = data;
     const operator = operatorManager.getOperator(socket.operatorId);
     const sessionId = `ws-${socket.operatorId || 'default'}-${socket.id}`;
     
-    const response = await agentRouter.route(message, operator, language || 'en', sessionId);
+    let response;
+    if (missionId) {
+      // Route to plans officer with mission context
+      const mission = missionPlanner.getMission(missionId);
+      if (mission) {
+        const taskings = (mission.taskings || []).map(t => {
+          const tasks = Array.isArray(t.tasks) ? t.tasks.join('; ') : String(t.tasks || '');
+          return `${t.unit} [${t.priority}/${t.status}]: ${tasks} — Purpose: ${t.purpose}`;
+        }).join('\n');
+        const overlays = (mission.mapOverlays || []).map(o => `${o.type}: ${o.name} — ${o.description}`).join('\n');
+        
+        let opordText = '';
+        try { opordText = missionPlanner.generateOpordText(missionId); } catch(e) { console.error('[CHAT] OPORD gen error:', e.message); }
+        
+        const missionContext = {
+          opordText,
+          mettTc: JSON.stringify(mission.mettTc || {}, null, 2),
+          taskings,
+          overlays,
+          missionName: mission.name,
+          missionStatus: mission.status,
+        };
+        response = await agentRouter.route(message, operator, language || 'en', sessionId, { missionContext, forceAgent: 'plans_officer' });
+      } else {
+        response = await agentRouter.route(message, operator, language || 'en', sessionId);
+      }
+    } else {
+      response = await agentRouter.route(message, operator, language || 'en', sessionId);
+    }
     
     // Generate voice response if enabled
     if (voiceEnabled && voiceInterface.isEnabled()) {
@@ -732,6 +782,14 @@ io.on('connection', (socket) => {
       agent: response.agent,
       summary: response.content.substring(0, 100)
     });
+    } catch (err) {
+      console.error('[CHAT] FATAL handler error:', err);
+      socket.emit('response', {
+        agent: 'KDT Aso',
+        content: 'Internal error processing your request. Please try again.',
+        timestamp: new Date().toISOString()
+      });
+    }
   });
   
   // STT handled client-side via browser Web Speech API
@@ -1134,14 +1192,7 @@ app.get('/api/languages/:code/emergency-phrases', (req, res) => {
   res.json({ phrases, language: req.params.code });
 });
 
-// Admin API Routes (protected)
-const adminAuth = (req, res, next) => {
-  // Check if user has admin role
-  if (!req.user || req.user.role !== 'admin') {
-    return res.status(403).json({ error: 'Admin access required' });
-  }
-  next();
-};
+// adminAuth defined earlier (before encryption routes)
 
 // User management
 app.get('/api/admin/users', authMiddleware(authManager), adminAuth, (req, res) => {
@@ -1295,6 +1346,346 @@ app.get('/api/admin/audit', authMiddleware(authManager), adminAuth, async (req, 
   const logs = await adminSystem.getAuditLog(options);
   res.json(logs);
 });
+
+// ========== Mission Planner API ==========
+app.get('/api/missions', authMiddleware(authManager), (req, res) => {
+  res.json(missionPlanner.listMissions(req.query));
+});
+
+app.post('/api/missions', authMiddleware(authManager), (req, res) => {
+  const mission = missionPlanner.createMission({ ...req.body, createdBy: req.user.id });
+  io.emit('mission:created', { id: mission.id, name: mission.name });
+  res.json(mission);
+});
+
+app.get('/api/missions/tlp-steps', authMiddleware(authManager), (req, res) => {
+  res.json(missionPlanner.getTlpSteps());
+});
+
+app.get('/api/missions/mett-tc', authMiddleware(authManager), (req, res) => {
+  res.json(missionPlanner.getMettTcFramework());
+});
+
+app.get('/api/missions/:id', authMiddleware(authManager), (req, res) => {
+  const mission = missionPlanner.getMission(req.params.id);
+  if (!mission) return res.status(404).json({ error: 'Mission not found' });
+  res.json(mission);
+});
+
+app.put('/api/missions/:id/mett-tc/:category', authMiddleware(authManager), (req, res) => {
+  try {
+    const mission = missionPlanner.updateMettTc(req.params.id, req.params.category, req.body);
+    io.emit('mission:updated', { id: mission.id, section: 'mett-tc' });
+    res.json(mission);
+  } catch (err) { res.status(400).json({ error: err.message }); }
+});
+
+app.put('/api/missions/:id/opord/:paragraph', authMiddleware(authManager), (req, res) => {
+  try {
+    const mission = missionPlanner.updateOpord(req.params.id, req.params.paragraph, req.body.section, req.body.data);
+    io.emit('mission:updated', { id: mission.id, section: 'opord' });
+    res.json(mission);
+  } catch (err) { res.status(400).json({ error: err.message }); }
+});
+
+app.post('/api/missions/:id/advance-tlp', authMiddleware(authManager), (req, res) => {
+  try {
+    const mission = missionPlanner.advanceTlp(req.params.id);
+    io.emit('mission:tlp-advanced', { id: mission.id, step: mission.currentTlpStep });
+    res.json(mission);
+  } catch (err) { res.status(400).json({ error: err.message }); }
+});
+
+app.post('/api/missions/:id/overlays', authMiddleware(authManager), (req, res) => {
+  try {
+    const overlay = missionPlanner.addOverlay(req.params.id, { ...req.body, createdBy: req.user.id });
+    io.emit('mission:overlay-added', { missionId: req.params.id, overlay });
+    res.json(overlay);
+  } catch (err) { res.status(400).json({ error: err.message }); }
+});
+
+app.delete('/api/missions/:id/overlays/:overlayId', authMiddleware(authManager), (req, res) => {
+  try {
+    missionPlanner.removeOverlay(req.params.id, req.params.overlayId);
+    io.emit('mission:overlay-removed', { missionId: req.params.id, overlayId: req.params.overlayId });
+    res.json({ ok: true });
+  } catch (err) { res.status(400).json({ error: err.message }); }
+});
+
+app.post('/api/missions/:id/taskings', authMiddleware(authManager), (req, res) => {
+  try {
+    const task = missionPlanner.addTasking(req.params.id, { ...req.body, assignedBy: req.user.id });
+    io.emit('tasking:assigned', task);
+    res.json(task);
+  } catch (err) { res.status(400).json({ error: err.message }); }
+});
+
+app.put('/api/missions/:id/taskings/:taskId', authMiddleware(authManager), (req, res) => {
+  try {
+    const task = missionPlanner.updateTaskingStatus(req.params.id, req.params.taskId, req.body.status);
+    io.emit('tasking:updated', task);
+    res.json(task);
+  } catch (err) { res.status(400).json({ error: err.message }); }
+});
+
+app.get('/api/missions/:id/opord-text', authMiddleware(authManager), (req, res) => {
+  try {
+    const text = missionPlanner.generateOpordText(req.params.id);
+    res.type('text/plain').send(text);
+  } catch (err) { res.status(400).json({ error: err.message }); }
+});
+
+app.post('/api/missions/:id/recommendations', authMiddleware(authManager), (req, res) => {
+  try {
+    const mission = missionPlanner.addRecommendation(req.params.id, req.body);
+    res.json(mission);
+  } catch (err) { res.status(400).json({ error: err.message }); }
+});
+
+// AI auto-generate tactical overlays from OPORD
+app.post('/api/missions/:id/generate-overlays', authMiddleware(authManager), async (req, res) => {
+  try {
+    const mission = missionPlanner.getMission(req.params.id);
+    if (!mission) return res.status(404).json({ error: 'Mission not found' });
+
+    const opordText = missionPlanner.generateOpordText(req.params.id);
+    const mettTcText = JSON.stringify(mission.mettTc || {}, null, 2);
+    const existingOverlays = mission.mapOverlays.map(o =>
+      `${o.type}: ${o.name} at ${JSON.stringify(o.coordinates)}`
+    ).join('\n');
+
+    const Anthropic = require('@anthropic-ai/sdk');
+    const anthropic = new Anthropic();
+
+    const response = await anthropic.messages.create({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 4096,
+      system: `You are a tactical map overlay generator. Given an OPORD and METT-TC analysis, generate realistic tactical map overlays as JSON.
+
+RULES:
+- Generate overlays for: phase lines, objectives, friendly positions, enemy positions, routes, boundaries, obstacles, NAIs, rally points
+- Use realistic coordinates near the area of operations. If coordinates are mentioned in the OPORD, use those. Otherwise generate plausible coordinates near Abuja, Nigeria (lat ~9.0, lng ~7.5) as the default operational area.
+- Each overlay needs: type, name, description, coordinates
+- Point types (friendly, enemy, objective, rally-point, nai): coordinates = [lat, lng]
+- Line types (phase-line, boundary, route, obstacle): coordinates = [[lat, lng], [lat, lng], ...]
+- Return ONLY valid JSON array, no markdown fences or explanation
+
+Existing overlays (avoid duplicating):
+${existingOverlays || 'None'}`,
+      messages: [{
+        role: 'user',
+        content: `Generate tactical overlays for this operation:\n\n## OPORD\n${opordText}\n\n## METT-TC\n${mettTcText}`
+      }]
+    });
+
+    let overlaysJson;
+    try {
+      const text = response.content[0].text.trim();
+      // Strip markdown fences if present
+      const cleaned = text.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '');
+      overlaysJson = JSON.parse(cleaned);
+    } catch (parseErr) {
+      console.error('[GENERATE OVERLAYS] Parse error:', parseErr.message);
+      return res.status(500).json({ error: 'AI generated invalid overlay data' });
+    }
+
+    if (!Array.isArray(overlaysJson)) {
+      return res.status(500).json({ error: 'Expected array of overlays' });
+    }
+
+    const created = [];
+    for (const raw of overlaysJson) {
+      if (!raw.type || !raw.name || !raw.coordinates) continue;
+      try {
+        const overlay = missionPlanner.addOverlay(req.params.id, {
+          type: raw.type,
+          name: raw.name,
+          description: raw.description || '',
+          coordinates: raw.coordinates,
+          createdBy: 'ai-auto',
+        });
+        created.push(overlay);
+      } catch (e) { console.error('[GENERATE OVERLAYS] Add error:', e.message); }
+    }
+
+    io.emit('mission:overlays-generated', { missionId: req.params.id, count: created.length });
+    res.json({ generated: created.length, overlays: created });
+  } catch (err) {
+    console.error('[GENERATE OVERLAYS] Error:', err.message);
+    res.status(500).json({ error: 'Failed to generate overlays' });
+  }
+});
+
+app.delete('/api/missions/:id', authMiddleware(authManager), adminAuth, (req, res) => {
+  missionPlanner.deleteMission(req.params.id);
+  io.emit('mission:deleted', { id: req.params.id });
+  res.json({ ok: true });
+});
+
+// ========== Incident Tracking API ==========
+app.get('/api/incidents', authMiddleware(authManager), (req, res) => {
+  res.json(incidentTracker.list({ ...req.query, role: req.user.role }));
+});
+
+app.post('/api/incidents', authMiddleware(authManager), (req, res) => {
+  const incident = incidentTracker.create({ ...req.body, reportedBy: req.user.id });
+  io.emit('incident:created', { id: incident.id, title: incident.title, priority: incident.priority });
+  res.json(incident);
+});
+
+app.get('/api/incidents/types', authMiddleware(authManager), (req, res) => {
+  res.json({ types: incidentTracker.getTypes(), priorities: incidentTracker.getPriorityLevels() });
+});
+
+app.get('/api/incidents/:id', authMiddleware(authManager), (req, res) => {
+  const incident = incidentTracker.get(req.params.id);
+  if (!incident) return res.status(404).json({ error: 'Incident not found' });
+  res.json(incident);
+});
+
+app.put('/api/incidents/:id', authMiddleware(authManager), (req, res) => {
+  try {
+    const incident = incidentTracker.update(req.params.id, { ...req.body, updatedBy: req.user.id });
+    io.emit('incident:updated', { id: incident.id, status: incident.status });
+    res.json(incident);
+  } catch (err) { res.status(400).json({ error: err.message }); }
+});
+
+app.post('/api/incidents/:id/events', authMiddleware(authManager), (req, res) => {
+  try {
+    const incident = incidentTracker.addEvent(req.params.id, { ...req.body, by: req.user.id });
+    io.emit('incident:event', { id: incident.id });
+    res.json(incident);
+  } catch (err) { res.status(400).json({ error: err.message }); }
+});
+
+app.get('/api/incidents/:id/aar-template', authMiddleware(authManager), (req, res) => {
+  try {
+    res.json(incidentTracker.generateAarTemplate(req.params.id));
+  } catch (err) { res.status(400).json({ error: err.message }); }
+});
+
+app.post('/api/incidents/:id/aar', authMiddleware(authManager), (req, res) => {
+  try {
+    const incident = incidentTracker.storeAar(req.params.id, req.body);
+    io.emit('incident:aar-generated', { id: incident.id });
+    res.json(incident);
+  } catch (err) { res.status(400).json({ error: err.message }); }
+});
+
+// ========== Mission Chat API ==========
+app.post('/api/missions/:id/chat', authMiddleware(authManager), async (req, res) => {
+  try {
+    const mission = missionPlanner.getMission(req.params.id);
+    if (!mission) return res.status(404).json({ error: 'Mission not found' });
+
+    const { message, conversationHistory } = req.body;
+    if (!message) return res.status(400).json({ error: 'Message required' });
+
+    // Build full mission context
+    const opordText = missionPlanner.generateOpordText(req.params.id);
+    const mettTcText = JSON.stringify(mission.mettTc, null, 2);
+    const taskingsText = mission.taskings.map(t => 
+      `${t.unit} [${t.priority}/${t.status}]: ${t.tasks.join('; ')} — Purpose: ${t.purpose}`
+    ).join('\n');
+    const overlaysText = mission.mapOverlays.map(o =>
+      `${o.type}: ${o.name} — ${o.description} (by ${o.createdBy})`
+    ).join('\n');
+
+    const systemPrompt = `You are KDT Aso, an AI military operations assistant. You are currently assisting with mission planning for "${mission.name}".
+
+## Your Capabilities
+- You have the FULL company-level OPORD and all mission data below
+- You can extract subordinate unit tasks and generate platoon/squad-level OPORDs
+- You follow US Army doctrine: FM 6-0, FM 5-0, ATP 5-0.1
+- You produce properly formatted 5-paragraph OPORDs
+- You understand METT-TC analysis and Troop Leading Procedures
+- When generating a subordinate OPORD, you extract the relevant tasks from the higher OPORD and expand them with appropriate detail for that echelon
+
+## Mission: ${mission.name}
+## Status: ${mission.status} | TLP Step: ${mission.currentTlpStep}/8
+
+## FULL OPERATIONS ORDER
+${opordText}
+
+## METT-TC ANALYSIS
+${mettTcText}
+
+## TASK ASSIGNMENTS
+${taskingsText}
+
+## MAP OVERLAYS
+${overlaysText}
+
+## Instructions
+- When asked to generate a subordinate OPORD (platoon, squad), extract the relevant portions from the company OPORD above
+- Expand tactical details appropriate to the subordinate echelon
+- Include specific grid coordinates, timelines, and coordinating instructions
+- Format as a proper 5-paragraph OPORD
+- Reference phase lines, objectives, and other control measures from the company plan
+- Be direct and professional. This is an operations environment.
+
+Current time: ${new Date().toISOString()}`;
+
+    // Build messages array with conversation history
+    const messages = [];
+    if (conversationHistory?.length) {
+      for (const msg of conversationHistory.slice(-10)) {
+        messages.push({ role: msg.role, content: msg.content });
+      }
+    }
+    messages.push({ role: 'user', content: message });
+
+    const Anthropic = require('@anthropic-ai/sdk');
+    const anthropic = new Anthropic();
+    
+    const response = await anthropic.messages.create({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 4096,
+      system: systemPrompt,
+      messages: messages,
+    });
+
+    const responseContent = response.content[0].text;
+
+    res.json({
+      role: 'assistant',
+      content: responseContent,
+      missionId: mission.id,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (err) {
+    console.error('[MISSION CHAT] Error:', err.message);
+    res.status(500).json({ error: 'Failed to process mission chat' });
+  }
+});
+
+// ========== Shift Management API ==========
+app.get('/api/shifts/schedules', authMiddleware(authManager), (req, res) => {
+  res.json(shiftManager.listSchedules());
+});
+
+app.post('/api/shifts/schedules', authMiddleware(authManager), adminAuth, (req, res) => {
+  const schedule = shiftManager.createSchedule(req.body);
+  res.json(schedule);
+});
+
+app.delete('/api/shifts/schedules/:id', authMiddleware(authManager), adminAuth, (req, res) => {
+  shiftManager.deleteSchedule(req.params.id);
+  res.json({ ok: true });
+});
+
+app.get('/api/shifts/active', authMiddleware(authManager), (req, res) => {
+  res.json(shiftManager.getActiveShifts());
+});
+
+// Start shift auto-checker after server init
+shiftManager.startAutoCheck(io, () => ({
+  incidents: incidentTracker.list({ status: 'open' }),
+  missions: missionPlanner.listMissions({ status: 'executing' }),
+  pendingTasks: [],
+  alerts: [],
+}));
 
 // Global error handler — MUST be after all routes
 app.use(globalErrorHandler);

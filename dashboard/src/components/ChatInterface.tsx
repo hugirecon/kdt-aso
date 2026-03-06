@@ -9,35 +9,52 @@ interface Message {
   audioUrl?: string
 }
 
+interface MissionSuggestion {
+  label: string
+  message: string
+}
+
 interface ChatInterfaceProps {
   messages: Message[]
   onSendMessage: (message: string, voiceEnabled?: boolean) => void
   connected: boolean
   userTitle?: string
   voiceEnabled?: boolean
-  voiceAvailable?: boolean   // TTS available (server-side ElevenLabs)
-  sttAvailable?: boolean     // STT available (browser Web Speech API)
+  voiceAvailable?: boolean
+  sttAvailable?: boolean
   isRecording?: boolean
   isPlaying?: boolean
   onStartRecording?: () => void
   onStopRecording?: () => void
   onToggleVoice?: () => void
   onPlayAudio?: (url: string) => void
+  // Mission context
+  activeMissionId?: string | null
+  activeMissionName?: string | null
 }
+
+const MISSION_SUGGESTIONS: MissionSuggestion[] = [
+  { label: 'Generate my platoon OPORD', message: "I'm the platoon leader of 3rd Platoon. Generate a platoon-level OPORD for my element based on our role in this operation." },
+  { label: 'Analyze risks for Phase 2', message: 'What are the key risks for the search force during Phase 2?' },
+  { label: 'Recommend positions for 1st PLT', message: "Recommend phase lines and checkpoints for 1st Platoon's cordon position." },
+  { label: 'Enemy COA analysis', message: "What are the enemy's most likely actions when they detect our cordon?" },
+]
 
 const ChatInterface: React.FC<ChatInterfaceProps> = ({ 
   messages, 
   onSendMessage, 
   connected,
   voiceEnabled = false,
-  voiceAvailable = false,  // TTS (ElevenLabs)
-  sttAvailable = false,    // STT (browser)
+  voiceAvailable = false,
+  sttAvailable = false,
   isRecording = false,
   isPlaying = false,
   onStartRecording,
   onStopRecording,
   onToggleVoice,
-  onPlayAudio
+  onPlayAudio,
+  activeMissionId,
+  activeMissionName,
 }) => {
   const [input, setInput] = useState('')
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -52,6 +69,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       onSendMessage(input, voiceEnabled)
       setInput('')
     }
+  }
+
+  const handleSuggestion = (msg: string) => {
+    onSendMessage(msg, voiceEnabled)
   }
 
   const handleVoiceClick = () => {
@@ -71,11 +92,34 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
   return (
     <div className="chat-interface">
+      {/* Mission context banner */}
+      {activeMissionId && (
+        <div className="chat-mission-banner">
+          🎯 Mission context active: <strong>{activeMissionName}</strong>
+        </div>
+      )}
+
       <div className="chat-messages">
         {messages.length === 0 ? (
           <div className="empty-state">
-            <p>KDT Aso ready.</p>
-            <p style={{ marginTop: '8px' }}>Speak to your staff. They're waiting.</p>
+            {activeMissionId ? (
+              <>
+                <p>Mission: <strong>{activeMissionName}</strong></p>
+                <p style={{ marginTop: '8px', color: 'var(--text-secondary)' }}>Ask Aso anything about this operation.</p>
+                <div className="chat-suggestions">
+                  {MISSION_SUGGESTIONS.map((s, i) => (
+                    <button key={i} className="chat-suggestion-btn" onClick={() => handleSuggestion(s.message)}>
+                      {s.label}
+                    </button>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <>
+                <p>KDT Aso ready.</p>
+                <p style={{ marginTop: '8px' }}>Speak to your staff. They're waiting.</p>
+              </>
+            )}
           </div>
         ) : (
           messages.map(msg => (
@@ -116,7 +160,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
           <input
             type="text"
             className="chat-input"
-            placeholder={isRecording ? 'Listening...' : 'Speak to your staff...'}
+            placeholder={activeMissionId ? `Ask about ${activeMissionName}...` : isRecording ? 'Listening...' : 'Speak to your staff...'}
             value={input}
             onChange={e => setInput(e.target.value)}
             disabled={!connected || isRecording}

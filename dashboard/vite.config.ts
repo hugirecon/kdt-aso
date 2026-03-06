@@ -13,6 +13,7 @@ export default defineConfig({
     port: 3002,
     proxy: {
       '/api': 'http://localhost:3001',
+      '/tiles': 'http://localhost:3001',
       '/socket.io': {
         target: 'http://localhost:3001',
         ws: true

@@ -1,0 +1,857 @@
+{
+  "id": "4699854d-9c17-49bb-928f-6d359681a24e",
+  "name": "Operation IRON SENTINEL",
+  "createdBy": "admin",
+  "createdAt": "2026-03-06T05:07:00.510Z",
+  "updatedAt": "2026-03-06T05:07:00.514Z",
+  "status": "tentative-plan",
+  "currentTlpStep": 6,
+  "mettTc": {
+    "M": {
+      "higher_mission": "3rd Battalion, 7th Infantry Regiment conducts area security operations in Kaduna State NLT 060600Z MAR 2026 to neutralize insurgent activity and restore civil authority IOT enable freedom of movement along MSR LION.",
+      "commander_intent": "Purpose: Deny insurgent forces safe haven in the Zaria corridor. Key Tasks: (1) Isolate OBJ HAMMER, (2) Conduct cordon and search of OBJ HAMMER, (3) Detain suspected insurgent leaders. End State: OBJ HAMMER cleared of insurgent activity, MSR LION open to civilian traffic, local government authority restored.",
+      "specified_tasks": [
+        "Conduct cordon and search of OBJ HAMMER (Zaria industrial district)",
+        "Detain HVT SCORPION (insurgent cell leader)",
+        "Establish blocking positions along MSR LION",
+        "Provide situation reports every 2 hours"
+      ],
+      "implied_tasks": [
+        "Conduct reconnaissance of OBJ HAMMER prior to H-Hour",
+        "Coordinate with Nigerian Police Force for outer cordon",
+        "Establish casualty collection point",
+        "Prepare interpreter support",
+        "Coordinate indirect fire support"
+      ],
+      "essential_tasks": [
+        "Isolate and search OBJ HAMMER",
+        "Detain HVT SCORPION"
+      ],
+      "constraints": [
+        "Minimize civilian casualties",
+        "No kinetic engagement within 200m of Zaria Central Mosque",
+        "All detainees processed IAW ROE Card 7-Alpha",
+        "Operations must conclude before 1800L to avoid curfew violations"
+      ],
+      "end_state": "OBJ HAMMER cleared, HVT SCORPION detained or confirmed not present, MSR LION secured from PL RED to PL BLUE, no civilian casualties"
+    },
+    "E": {
+      "composition": "Estimated 15-25 insurgents from the Zaria Liberation Front (ZLF). Mix of trained fighters (former military) and local recruits. Known to employ IEDs, small arms (AK-47, PKM), and RPGs.",
+      "disposition": "Primary concentration in the industrial district (OBJ HAMMER), specifically the abandoned textile factory complex (grid NK 4523 7891). Observation posts reported at intersections along Market Street and Factory Road.",
+      "strength": "1x reinforced squad of trained fighters (8-10 personnel), 2x cells of local recruits (5-8 each). Total estimated: 18-26 personnel.",
+      "capabilities": [
+        "IED emplacement along MSR LION (3 confirmed in last 30 days)",
+        "Ambush using channelized terrain in industrial district",
+        "Early warning network using civilian cell phones",
+        "Tunnels connecting factory buildings (unconfirmed)",
+        "Possible VBIED capability"
+      ],
+      "probable_coa": "ZLF defends from prepared positions in the textile factory, delays with IEDs along approach routes, and attempts to exfiltrate HVT SCORPION through the market district to the north when cordon is detected.",
+      "dangerous_coa": "ZLF conducts VBIED attack against the cordon force at PL RED, creating a gap for a breakout of all personnel southward along the rail line.",
+      "vulnerabilities": [
+        "Limited night vision capability",
+        "Reliance on cell phone early warning (jammable)",
+        "Single exfiltration route through market district",
+        "Low ammunition resupply capability",
+        "Poor discipline among local recruits"
+      ]
+    },
+    "T_terrain": {
+      "observation": "Urban terrain limits observation to 100-300m along major roads. Factory buildings provide elevated observation from 3-4 story structures. Fields of fire channelized by narrow streets in the industrial district.",
+      "avenues": "Primary AA: MSR LION (paved, 2-lane) from south. Alternate AA: Factory Road from the east. Both channelized by buildings. Market Street provides north-south movement but is congested with vendors during daylight.",
+      "key_terrain": [
+        "Textile factory complex (OBJ HAMMER) — dominant structure in AO",
+        "Water tower at grid NK 4525 7895 — observation/sniper position",
+        "Railway overpass at PL RED — controls southern approach",
+        "Market district intersection — controls northern exfiltration"
+      ],
+      "obstacles": [
+        "Railway line running E-W (restricts vehicle movement)",
+        "Drainage canal along Factory Road (3m wide, 2m deep)",
+        "Concrete barriers at factory entrance",
+        "Possible IEDs along MSR LION between PL RED and PL BLUE"
+      ],
+      "cover_concealment": "Excellent cover in urban structures. Factory buildings offer reinforced concrete walls. Market stalls provide concealment but not cover. Open ground at railway crossing (100m danger area).",
+      "weather": "Clear skies, 32°C high, 22°C low. Wind NW at 8kph. Sunrise 0632, sunset 1845. Moon illumination 45% (first quarter). No precipitation expected.",
+      "visibility": "Good daytime visibility along major roads. Limited visibility in narrow alleyways and inside factory buildings. NVG effective in open areas. Urban lighting variable — Market Street lit, industrial district dark."
+    },
+    "T_troops": {
+      "organic": [
+        "Alpha Company, 3/7 IN (3x rifle platoons, 1x weapons platoon)",
+        "Company HQ section (CO, XO, 1SG, RTO, medic)"
+      ],
+      "attached": [
+        "1x Engineer squad (route clearance/breaching)",
+        "1x Military Intelligence Team (2x HUMINT collectors)",
+        "1x Military Police squad (detainee handling)",
+        "2x Interpreters (Hausa/English)"
+      ],
+      "supporting": [
+        "Battalion 81mm mortar platoon (2x tubes, HE and illumination)",
+        "1x UAV (RQ-11 Raven) from Battalion S2",
+        "Nigerian Police Force: 1x platoon for outer cordon",
+        "QRF: Bravo Company (15-min response from FOB EAGLE)"
+      ],
+      "combat_power": "Alpha Company at 92% strength. 3:1 ratio against estimated enemy. Advantage in firepower, night capability, and training. Disadvantage in urban terrain familiarity.",
+      "personnel_status": "127/138 assigned (92%). 3 personnel on R&R, 5 light duty, 3 non-deployable. All platoons mission capable.",
+      "equipment_status": "4x HMMWVs (all operational), 2x MRAPs (1 deadline for transmission — ETA repair 48hrs). All crew-served weapons operational. NVGs: 85% fill. Radio fill current."
+    },
+    "T_time": {
+      "mission_start": "2026-03-06T06:00:00Z",
+      "planning_time": "12 hours (WARNORD issued 061800Z FEB, H-Hour 060600Z MAR)",
+      "prep_time": "6 hours from order issuance to SP",
+      "movement_time": "45 minutes from FOB EAGLE to PL RED (12km along MSR LION)",
+      "timeline": [
+        "H-12: WARNORD to platoon leaders",
+        "H-6: OPORD brief at company TOC",
+        "H-4: Pre-combat inspections complete",
+        "H-2: SP from FOB EAGLE",
+        "H-1: Arrive PL RED, establish cordon",
+        "H-Hour (0600L): Initiate search of OBJ HAMMER",
+        "H+2: Phase 2 — systematic clearing of factory complex",
+        "H+6: Phase 3 — consolidation and handoff to police",
+        "H+8: Phase 4 — withdrawal to FOB EAGLE",
+        "NLT H+12 (1800L): All elements returned to FOB EAGLE"
+      ]
+    },
+    "C": {
+      "population": "Zaria industrial district: ~5,000 residents. Mixed Hausa/Fulani population. Generally cooperative with security forces but intimidated by ZLF. Market district: ~15,000 daily foot traffic. Displaced persons camp (400 families) 2km north.",
+      "infrastructure": [
+        "Zaria Central Mosque (500m NW of OBJ — protected site)",
+        "Zaria General Hospital (1.2km south — CASEVAC route)",
+        "Cell tower at grid NK 4530 7900 (ZLF uses for C2)",
+        "Water treatment plant (1km east — critical infrastructure)"
+      ],
+      "organizations": [
+        "Zaria Local Government Council (cooperative)",
+        "Market Traders Association (neutral, will close market if warned)",
+        "Zaria Islamic Council (influential, must be informed before ops)",
+        "Red Cross / Red Crescent (medical support available)"
+      ],
+      "cultural": "Friday prayers at Central Mosque draw large crowds — operations should avoid Friday 1200-1400. Ramadan not currently observed. Local custom requires female searchers for women. Elders expect courtesy notification before military operations.",
+      "media": "2x local radio stations, 1x newspaper. Social media active — information spreads fast. ZLF uses WhatsApp for propaganda. Al Jazeera stringer based in Zaria. Operations should assume media awareness within 30 minutes.",
+      "legal": "Nigerian Armed Forces Rules of Engagement (ROE) Card 7-Alpha applies. Posse Comitatus not applicable (military authority under emergency decree). Detainees must be processed within 24 hours. Property damage must be documented."
+    }
+  },
+  "opord": {
+    "classification": "",
+    "dtg": "052200Z MAR 2026",
+    "unit": "Alpha Company, 3rd Battalion, 7th Infantry Regiment",
+    "opord_number": "003-26",
+    "references": [
+      "FM 3-06 Urban Operations",
+      "FM 3-90.119 Combined Arms Cordon and Search",
+      "Battalion OPORD 007-26",
+      "ROE Card 7-Alpha"
+    ],
+    "timezone": "W (West Africa Time, UTC+1)",
+    "paragraph_1_situation": {
+      "area_of_operations": {
+        "terrain": "Urban terrain, Zaria industrial district. Dense buildings (1-4 stories), narrow streets, limited vehicle access. Key terrain: textile factory complex (OBJ HAMMER), water tower, railway overpass. Drainage canal restricts east-west movement.",
+        "weather": "Clear, 32°C/22°C, wind NW 8kph. Sunrise 0632L, sunset 1845L. Moon 45% illumination. Good conditions for operations."
+      },
+      "enemy_forces": {
+        "composition": "Zaria Liberation Front (ZLF): 18-26 personnel in 3 cells",
+        "disposition": "Concentrated in abandoned textile factory complex, OBJ HAMMER (grid NK 4523 7891). OPs at Market St/Factory Rd intersections.",
+        "strength": "1x reinforced squad trained fighters, 2x cells local recruits",
+        "capabilities": "IEDs, small arms (AK-47, PKM, RPG), early warning via cell phones, possible tunnels and VBIED",
+        "enemy_coa": "Most Probable: Defend from factory, delay with IEDs, exfiltrate HVT north through market. Most Dangerous: VBIED attack on cordon at PL RED, breakout south along rail line."
+      },
+      "friendly_forces": {
+        "higher_mission": "3/7 IN conducts area security operations in Kaduna State to neutralize insurgent activity and restore civil authority.",
+        "higher_intent": "Deny insurgent safe haven in Zaria corridor. Isolate, search, and clear OBJ HAMMER. Restore freedom of movement on MSR LION.",
+        "adjacent_units": "Bravo Company: QRF at FOB EAGLE (15-min response). Charlie Company: conducting operations in Kaduna South (not available). Nigerian Police Force: 1x platoon OPCON to Alpha Company for outer cordon.",
+        "supporting_units": "BN mortar platoon (2x 81mm), 1x RQ-11 Raven UAV, MI team, MP squad, engineers."
+      },
+      "civil_considerations": "5,000 residents in AO. Zaria Central Mosque 500m NW (protected). Hospital 1.2km south. Market Traders Association will close market with notice. Islamic Council must be notified. Media awareness expected within 30 minutes. Female searchers required.",
+      "attachments_detachments": [
+        "ATTACHED: 1x Engineer squad (route clearance/breaching) from BN Engineer Plt",
+        "ATTACHED: 1x MI Team (2x HUMINT) from BN S2",
+        "ATTACHED: 1x MP squad (detainee ops) from BN MP Plt",
+        "ATTACHED: 2x Interpreters (Hausa/English)",
+        "OPCON: 1x Nigerian Police platoon (outer cordon)"
+      ],
+      "assumptions": [
+        "ZLF has not received reinforcement in last 72 hours",
+        "HVT SCORPION is present at OBJ HAMMER",
+        "Civilian population will comply with cordon instructions",
+        "QRF available throughout operation"
+      ]
+    },
+    "paragraph_2_mission": {
+      "who": "Alpha Company, 3/7 IN",
+      "what": "conducts a cordon and search",
+      "when": "NLT 060600Z MAR 2026 (H-Hour)",
+      "where": "of OBJ HAMMER (Zaria industrial district, grid NK 4523 7891)",
+      "why": "to neutralize ZLF insurgent activity and detain HVT SCORPION IOT restore civil authority and freedom of movement along MSR LION.",
+      "mission_statement": "Alpha Company, 3/7 IN conducts a cordon and search of OBJ HAMMER (Zaria industrial district) NLT 060600Z MAR 2026 to neutralize ZLF insurgent activity and detain HVT SCORPION IOT restore civil authority and freedom of movement along MSR LION."
+    },
+    "paragraph_3_execution": {
+      "commander_intent": {
+        "purpose": "Deny ZLF safe haven in Zaria industrial district and remove insurgent leadership.",
+        "key_tasks": [
+          "Isolate OBJ HAMMER with inner and outer cordon",
+          "Systematically search the textile factory complex",
+          "Detain HVT SCORPION and all military-age males for screening",
+          "Clear IEDs along MSR LION from PL RED to PL BLUE"
+        ],
+        "end_state": "OBJ HAMMER cleared, HVT detained or confirmed absent, MSR LION secured PL RED to PL BLUE, zero civilian casualties, Alpha Company consolidated at FOB EAGLE."
+      },
+      "concept_of_operations": {
+        "scheme_of_maneuver": "Operation IRON SENTINEL is a four-phase company cordon and search. Phase 1 (Isolation): 1st and 2nd Platoons establish inner cordon around OBJ HAMMER from the south and east while NPF establishes outer cordon. Phase 2 (Search): 3rd Platoon conducts systematic search of the factory complex from east to west with engineer and MI support. Phase 3 (Consolidation): Search complete, begin detainee processing and evidence collection. Phase 4 (Withdrawal): Handoff to NPF, phased withdrawal to FOB EAGLE with 2nd Platoon as rear guard.",
+        "fires": "Battalion 81mm mortars in direct support. Priority of fires to the search force (3rd Platoon) during Phase 2. Illumination on call. No HE within 200m of Zaria Central Mosque. UAV provides persistent overhead ISR throughout.",
+        "phases": [
+          {
+            "name": "Phase 1 — Isolation",
+            "description": "H-1 to H-Hour. 1st PLT establishes cordon south (PL RED to OBJ). 2nd PLT establishes cordon east (Factory Road). Engineers clear MSR LION to PL BLUE. NPF outer cordon north and west. UAV on station."
+          },
+          {
+            "name": "Phase 2 — Search",
+            "description": "H-Hour to H+4. 3rd PLT conducts search of factory complex, building by building, east to west. MI team screens military-age males. Engineers breach locked structures. MP handles detainees."
+          },
+          {
+            "name": "Phase 3 — Consolidation",
+            "description": "H+4 to H+8. Process all detainees. Collect and catalog evidence. Battle damage assessment. Medical treatment of casualties. Report to BN."
+          },
+          {
+            "name": "Phase 4 — Withdrawal",
+            "description": "H+8 to H+12. Handoff AO to NPF. Phased withdrawal: 3rd PLT, 1st PLT, Company HQ, 2nd PLT (rear guard). Movement to FOB EAGLE via MSR LION."
+          }
+        ]
+      },
+      "tasks_to_subordinate_units": [
+        {
+          "unit": "1st Platoon",
+          "tasks": [
+            "Establish inner cordon south of OBJ HAMMER along PL RED",
+            "Block enemy exfiltration south along railway line",
+            "Be prepared to reinforce 3rd Platoon on order",
+            "Provide 1x squad as reserve at railway overpass"
+          ],
+          "purpose": "Prevent enemy escape south and isolate OBJ HAMMER"
+        },
+        {
+          "unit": "2nd Platoon",
+          "tasks": [
+            "Establish inner cordon east of OBJ HAMMER along Factory Road",
+            "Control intersection at Factory Road and Market Street",
+            "Deny enemy movement into market district",
+            "Serve as rear guard during Phase 4 withdrawal"
+          ],
+          "purpose": "Prevent enemy escape east and north, secure withdrawal route"
+        },
+        {
+          "unit": "3rd Platoon (Main Effort)",
+          "tasks": [
+            "Conduct systematic search of textile factory complex",
+            "Clear buildings east to west with attached engineers",
+            "Screen all military-age males with MI team support",
+            "Detain HVT SCORPION on identification",
+            "Mark and bypass suspected IEDs for engineer disposal"
+          ],
+          "purpose": "Clear OBJ HAMMER of insurgent activity and detain HVT"
+        },
+        {
+          "unit": "Weapons Platoon",
+          "tasks": [
+            "Establish support-by-fire position at water tower (grid NK 4525 7895)",
+            "Provide overwatch of OBJ HAMMER during Phase 2",
+            "Be prepared to shift fires to support any platoon",
+            "Control company net radio relay from water tower"
+          ],
+          "purpose": "Provide suppressive fires and overwatch of the objective"
+        }
+      ],
+      "coordinating_instructions": {
+        "timeline": [
+          {
+            "time": "H-12",
+            "event": "WARNORD to platoon leaders"
+          },
+          {
+            "time": "H-6",
+            "event": "OPORD brief at company TOC"
+          },
+          {
+            "time": "H-4",
+            "event": "Pre-combat inspections complete"
+          },
+          {
+            "time": "H-3",
+            "event": "Test fire weapons, comms check"
+          },
+          {
+            "time": "H-2",
+            "event": "SP FOB EAGLE"
+          },
+          {
+            "time": "H-1.5",
+            "event": "Engineers begin route clearance MSR LION"
+          },
+          {
+            "time": "H-1",
+            "event": "1st and 2nd PLT establish cordon"
+          },
+          {
+            "time": "H-0:30",
+            "event": "NPF outer cordon set, UAV on station"
+          },
+          {
+            "time": "H-Hour",
+            "event": "3rd PLT initiates search"
+          },
+          {
+            "time": "H+4",
+            "event": "Begin Phase 3 consolidation"
+          },
+          {
+            "time": "H+8",
+            "event": "Begin Phase 4 withdrawal"
+          },
+          {
+            "time": "NLT H+12",
+            "event": "All elements at FOB EAGLE"
+          }
+        ],
+        "rules_of_engagement": "ROE Card 7-Alpha. Graduated response: shout, show, shove, shoot. PID required before engagement. No fires within 200m of Central Mosque. Minimum force against civilians. Detainees treated IAW Geneva Conventions.",
+        "risk_mitigation": [
+          "IED: Engineers lead all mounted movement. 5-25m checks at halts. Route clearance prior to main body.",
+          "Civilian casualties: Female searchers for women. Interpreter present at all checkpoints. Minimize use of heavy weapons.",
+          "Fratricide: All elements wear IR identifiers. Sectors of fire strictly enforced. No cross-cordon fires without CO approval.",
+          "VBIED: Vehicle checkpoints at PL RED and PL BLUE. No unauthorized vehicles in cordon."
+        ],
+        "phase_lines": [
+          {
+            "name": "RED",
+            "description": "Railway overpass — southern limit of cordon. Release point for mounted movement.",
+            "coordinates": [
+              [
+                11.078,
+                7.71
+              ],
+              [
+                11.078,
+                7.72
+              ]
+            ]
+          },
+          {
+            "name": "BLUE",
+            "description": "Northern edge of factory complex — limit of advance for search force.",
+            "coordinates": [
+              [
+                11.083,
+                7.71
+              ],
+              [
+                11.083,
+                7.72
+              ]
+            ]
+          },
+          {
+            "name": "GREEN",
+            "description": "Market Street — boundary between inner and outer cordon.",
+            "coordinates": [
+              [
+                11.085,
+                7.71
+              ],
+              [
+                11.085,
+                7.72
+              ]
+            ]
+          }
+        ],
+        "objectives": [
+          {
+            "name": "HAMMER",
+            "description": "Textile factory complex — primary objective for cordon and search",
+            "coordinates": [
+              11.081,
+              7.715
+            ]
+          },
+          {
+            "name": "ANVIL",
+            "description": "Water tower — support by fire position for Weapons PLT",
+            "coordinates": [
+              11.0825,
+              7.7165
+            ]
+          }
+        ],
+        "rally_points": [
+          "ORP ALPHA: Grid NK 4520 7885 (south of PL RED, covered by tree line)",
+          "CCP: Grid NK 4518 7890 (south of railway overpass, accessible by vehicle)"
+        ],
+        "actions_on_contact": "Cordon elements: Return fire, report, contain. Do not pursue into OBJ without CO approval. Search force: Clear through resistance, mark and bypass fortified positions for engineer breaching.",
+        "actions_on_objective": "Search force clears all buildings systematically. All rooms marked after clearing (IR chemlight). Military-age males moved to screening site at OBJ HAMMER east entrance. MI conducts tactical questioning. MP photographs and processes detainees.",
+        "consolidation_reorganization": "ACE report to CO within 30 minutes of Phase 2 completion. Consolidate ammunition. Redistribute casualties. Evidence collection teams sweep OBJ before handoff to NPF."
+      }
+    },
+    "paragraph_4_sustainment": {
+      "logistics": {
+        "supply": "Class I: Each soldier carries 2x MREs. Resupply available at FOB EAGLE. Class V: Basic load plus 1x additional magazine per rifleman. 2x extra belts per MG. Mortar: 40 rounds HE, 20 rounds illumination.",
+        "transportation": "4x HMMWVs, 1x MRAP for company movement. Engineers: 1x route clearance vehicle. MP: 1x detention transport vehicle. Vehicles stage at PL RED during search operations.",
+        "maintenance": "1x MRAP deadline (transmission). Remaining vehicles at 100%. Recovery plan: BN maintenance team on standby at FOB EAGLE."
+      },
+      "personnel": {
+        "medical": "Company medic with 3rd Platoon (search force). Aid bag with each platoon medic. CCP established south of PL RED (grid NK 4518 7890). Ground CASEVAC to Zaria General Hospital (1.2km south, 5-min drive).",
+        "casualty_evacuation": "Priority CASEVAC: Ground ambulance staged at CCP. Route: CCP → MSR LION south → Zaria General Hospital. Alternate: Helicopter MEDEVAC from LZ EAGLE (FOB EAGLE, 15-min flight). 9-Line MEDEVAC format on company net.",
+        "personnel_replacement": "No replacements available during operation. BN S1 notified of potential needs post-operation."
+      }
+    },
+    "paragraph_5_command_signal": {
+      "command": {
+        "location_commander": "CO with 3rd Platoon (search force) during Phase 2. At company TOC (PL RED) during Phases 1, 3, 4.",
+        "location_cp": "Company TOC at railway overpass, PL RED (grid NK 4520 7888). Alternate CP with Weapons PLT at water tower.",
+        "succession_of_command": [
+          "Company Commander (CPT Torres)",
+          "Company XO (1LT Park)",
+          "1st Platoon Leader (2LT Adams)",
+          "3rd Platoon Leader (1LT Okafor)"
+        ]
+      },
+      "signal": {
+        "primary_frequency": "Company Net: FM 42.350 MHz (encrypted)",
+        "alternate_frequency": "Alternate: FM 38.750 MHz. BN Command Net: FM 51.200 MHz",
+        "signals": [
+          "Green star cluster: Cordon set (Phase 1 complete)",
+          "Red star cluster: Emergency withdrawal",
+          "IR strobe: Friendly position marking",
+          "3x long whistle blasts: Cease fire"
+        ],
+        "passwords": "Running password: IRON. Number combination: 7 (any two numbers summing to 7).",
+        "code_words": [
+          {
+            "word": "SLEDGEHAMMER",
+            "meaning": "HVT SCORPION positively identified"
+          },
+          {
+            "word": "BLACKOUT",
+            "meaning": "Initiate cell phone jamming"
+          },
+          {
+            "word": "DUSTOFF",
+            "meaning": "CASEVAC requested"
+          },
+          {
+            "word": "RECALL",
+            "meaning": "Abort mission, withdrawal to FOB EAGLE"
+          },
+          {
+            "word": "JACKPOT",
+            "meaning": "HVT SCORPION detained"
+          }
+        ]
+      }
+    },
+    "annexes": [],
+    "overlays": []
+  },
+  "mapOverlays": [
+    {
+      "id": "9f06badb-7d6c-4722-9722-0ede600c032e",
+      "type": "phase-line",
+      "name": "PL RED",
+      "description": "Southern limit of cordon / release point",
+      "coordinates": [
+        [
+          11.078,
+          7.71
+        ],
+        [
+          11.078,
+          7.72
+        ]
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T05:07:00.512Z",
+      "createdBy": "bn-s3",
+      "visible": true
+    },
+    {
+      "id": "f7dcb5e0-3aa1-4a6d-bb6c-ab41594d3fbf",
+      "type": "phase-line",
+      "name": "PL BLUE",
+      "description": "Northern edge of factory complex / LOA",
+      "coordinates": [
+        [
+          11.083,
+          7.71
+        ],
+        [
+          11.083,
+          7.72
+        ]
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T05:07:00.512Z",
+      "createdBy": "bn-s3",
+      "visible": true
+    },
+    {
+      "id": "85c4a7c1-155f-436a-8675-abd5c1a811fa",
+      "type": "phase-line",
+      "name": "PL GREEN",
+      "description": "Market Street / inner-outer cordon boundary",
+      "coordinates": [
+        [
+          11.085,
+          7.71
+        ],
+        [
+          11.085,
+          7.72
+        ]
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T05:07:00.512Z",
+      "createdBy": "bn-s3",
+      "visible": true
+    },
+    {
+      "id": "cc9d6468-cc44-4cbb-82c3-a0a5385ab90e",
+      "type": "objective",
+      "name": "OBJ HAMMER",
+      "description": "Textile factory complex — primary search objective",
+      "coordinates": [
+        11.081,
+        7.715
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T05:07:00.512Z",
+      "createdBy": "bn-s3",
+      "visible": true
+    },
+    {
+      "id": "8e24b2b1-31b2-4c2a-bd02-eae4317ff3d6",
+      "type": "objective",
+      "name": "OBJ ANVIL",
+      "description": "Water tower — SBF position",
+      "coordinates": [
+        11.0825,
+        7.7165
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T05:07:00.512Z",
+      "createdBy": "bn-s3",
+      "visible": true
+    },
+    {
+      "id": "9da91e65-4173-4680-b1b4-c61b05a8152c",
+      "type": "friendly",
+      "name": "1st PLT — Cordon South",
+      "description": "Inner cordon along PL RED, blocking south",
+      "coordinates": [
+        11.0785,
+        7.714
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T05:07:00.512Z",
+      "createdBy": "co-cdr",
+      "visible": true
+    },
+    {
+      "id": "32adfa2d-b478-4ffa-9d80-b59410941f8c",
+      "type": "friendly",
+      "name": "2nd PLT — Cordon East",
+      "description": "Inner cordon along Factory Road",
+      "coordinates": [
+        11.081,
+        7.7185
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T05:07:00.512Z",
+      "createdBy": "co-cdr",
+      "visible": true
+    },
+    {
+      "id": "17e502ae-b166-4194-81e7-ea93e9b0b7f1",
+      "type": "friendly",
+      "name": "3rd PLT — Search Force",
+      "description": "Main effort, search OBJ HAMMER E to W",
+      "coordinates": [
+        11.081,
+        7.7155
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T05:07:00.512Z",
+      "createdBy": "co-cdr",
+      "visible": true
+    },
+    {
+      "id": "9bc1b1b3-204d-4438-983f-9c75cace52cb",
+      "type": "friendly",
+      "name": "WPN PLT — SBF",
+      "description": "Support by fire at water tower",
+      "coordinates": [
+        11.0825,
+        7.7165
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T05:07:00.512Z",
+      "createdBy": "co-cdr",
+      "visible": true
+    },
+    {
+      "id": "0b49234d-31ef-44fb-8954-d19434e19c72",
+      "type": "friendly",
+      "name": "Company TOC",
+      "description": "CP at railway overpass",
+      "coordinates": [
+        11.0778,
+        7.714
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T05:07:00.513Z",
+      "createdBy": "co-cdr",
+      "visible": true
+    },
+    {
+      "id": "a0777cb8-6a1c-44da-b82f-cd096eff52d0",
+      "type": "enemy",
+      "name": "ZLF Main Body",
+      "description": "Est. 10-15 fighters in textile factory",
+      "coordinates": [
+        11.0812,
+        7.7148
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T05:07:00.513Z",
+      "createdBy": "bn-s2",
+      "visible": true
+    },
+    {
+      "id": "2ccee62a-c6f4-44a3-9719-5df263c7691d",
+      "type": "enemy",
+      "name": "ZLF OP North",
+      "description": "Observation post at Market St intersection",
+      "coordinates": [
+        11.0845,
+        7.7145
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T05:07:00.513Z",
+      "createdBy": "bn-s2",
+      "visible": true
+    },
+    {
+      "id": "c58117eb-2a06-49ec-a8b5-7303f6489ea5",
+      "type": "enemy",
+      "name": "ZLF OP East",
+      "description": "Observation post at Factory Rd intersection",
+      "coordinates": [
+        11.0815,
+        7.718
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T05:07:00.513Z",
+      "createdBy": "bn-s2",
+      "visible": true
+    },
+    {
+      "id": "6bbc1544-35f5-4004-bdbc-b30770971fa2",
+      "type": "obstacle",
+      "name": "IED Belt",
+      "description": "Suspected IED belt along MSR LION approach",
+      "coordinates": [
+        [
+          11.079,
+          7.713
+        ],
+        [
+          11.079,
+          7.716
+        ]
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T05:07:00.513Z",
+      "createdBy": "bn-s2",
+      "visible": true
+    },
+    {
+      "id": "9dcfb557-b3d3-4de9-bda3-d52f555e63db",
+      "type": "route",
+      "name": "MSR LION",
+      "description": "Main supply route, primary axis of advance",
+      "coordinates": [
+        [
+          11.076,
+          7.714
+        ],
+        [
+          11.078,
+          7.714
+        ],
+        [
+          11.081,
+          7.714
+        ],
+        [
+          11.085,
+          7.714
+        ]
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T05:07:00.513Z",
+      "createdBy": "bn-s3",
+      "visible": true
+    },
+    {
+      "id": "f3661af8-9f28-435d-bbf6-cb24234b653a",
+      "type": "nai",
+      "name": "NAI 1 — Factory Gate",
+      "description": "Main entrance to textile factory",
+      "coordinates": [
+        11.0808,
+        7.7145
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T05:07:00.513Z",
+      "createdBy": "bn-s2",
+      "visible": true
+    },
+    {
+      "id": "aed7864d-55cf-4edf-9343-815693ff3e42",
+      "type": "nai",
+      "name": "NAI 2 — North Alley",
+      "description": "Suspected exfil route to market district",
+      "coordinates": [
+        11.084,
+        7.715
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T05:07:00.514Z",
+      "createdBy": "bn-s2",
+      "visible": true
+    },
+    {
+      "id": "2530a809-f134-47ac-961a-eddad66830f1",
+      "type": "rally-point",
+      "name": "ORP ALPHA",
+      "description": "Objective rally point south of PL RED",
+      "coordinates": [
+        11.077,
+        7.7135
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T05:07:00.514Z",
+      "createdBy": "co-cdr",
+      "visible": true
+    },
+    {
+      "id": "977b3d14-3dc0-48df-9cf5-4837bb23dc82",
+      "type": "rally-point",
+      "name": "CCP",
+      "description": "Casualty collection point",
+      "coordinates": [
+        11.0775,
+        7.7138
+      ],
+      "properties": {},
+      "createdAt": "2026-03-06T05:07:00.514Z",
+      "createdBy": "co-cdr",
+      "visible": true
+    }
+  ],
+  "timeline": [],
+  "notes": [],
+  "aiRecommendations": [],
+  "taskings": [
+    {
+      "id": "62e88752-6ae7-4051-a179-5baa72b2c82d",
+      "unit": "1st Platoon",
+      "tasks": [
+        "Establish inner cordon south along PL RED",
+        "Block railway line",
+        "Provide 1x squad reserve at overpass"
+      ],
+      "purpose": "Prevent enemy escape south, isolate OBJ",
+      "priority": "priority",
+      "status": "pending",
+      "assignedAt": "2026-03-06T05:07:00.514Z",
+      "assignedBy": "co-cdr",
+      "dueAt": null
+    },
+    {
+      "id": "704f9226-9571-4290-91cb-f8927c3e6005",
+      "unit": "2nd Platoon",
+      "tasks": [
+        "Establish inner cordon east along Factory Road",
+        "Control Factory Rd/Market St intersection",
+        "Rear guard during withdrawal"
+      ],
+      "purpose": "Prevent enemy escape east/north",
+      "priority": "priority",
+      "status": "pending",
+      "assignedAt": "2026-03-06T05:07:00.514Z",
+      "assignedBy": "co-cdr",
+      "dueAt": null
+    },
+    {
+      "id": "2c8e3bea-a8ee-4e3e-aa4d-c0b17e736e6d",
+      "unit": "3rd Platoon",
+      "tasks": [
+        "Systematic search of factory complex E to W",
+        "Screen MAMs with MI team",
+        "Detain HVT SCORPION on PID",
+        "Mark/bypass IEDs"
+      ],
+      "purpose": "Clear OBJ HAMMER, detain HVT",
+      "priority": "immediate",
+      "status": "pending",
+      "assignedAt": "2026-03-06T05:07:00.514Z",
+      "assignedBy": "co-cdr",
+      "dueAt": null
+    },
+    {
+      "id": "17e82518-32de-45e6-bda7-ad2d6fcdad11",
+      "unit": "Weapons Platoon",
+      "tasks": [
+        "Establish SBF at water tower",
+        "Overwatch OBJ HAMMER",
+        "Radio relay on company net"
+      ],
+      "purpose": "Provide suppressive fires and overwatch",
+      "priority": "priority",
+      "status": "pending",
+      "assignedAt": "2026-03-06T05:07:00.514Z",
+      "assignedBy": "co-cdr",
+      "dueAt": null
+    },
+    {
+      "id": "c20a7b27-62bc-4483-a568-5d8ff88cd1f0",
+      "unit": "Engineer Squad",
+      "tasks": [
+        "Route clearance MSR LION to PL BLUE",
+        "Breach locked structures in factory",
+        "IED disposal"
+      ],
+      "purpose": "Enable freedom of movement",
+      "priority": "immediate",
+      "status": "pending",
+      "assignedAt": "2026-03-06T05:07:00.514Z",
+      "assignedBy": "co-cdr",
+      "dueAt": null
+    },
+    {
+      "id": "07136039-b071-4d8d-a2ec-efaf631479a0",
+      "unit": "NPF Platoon",
+      "tasks": [
+        "Establish outer cordon north and west",
+        "Control civilian movement",
+        "Accept handoff of AO in Phase 4"
+      ],
+      "purpose": "Outer security and transition to civil authority",
+      "priority": "routine",
+      "status": "pending",
+      "assignedAt": "2026-03-06T05:07:00.514Z",
+      "assignedBy": "co-cdr",
+      "dueAt": null
+    }
+  ],
+  "incidents": []
+}

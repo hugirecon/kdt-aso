@@ -3,7 +3,7 @@
  * Enables offline functionality and PWA features
  */
 
-const CACHE_NAME = 'kdt-aso-v1';
+const CACHE_NAME = 'kdt-aso-v2';
 const OFFLINE_URL = '/offline.html';
 
 // Assets to cache immediately on install

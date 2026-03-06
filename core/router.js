@@ -45,7 +45,7 @@ class AgentRouter {
     // Agent sections and their personnel
     const sections = {
       hero: ['intelligence_officer', 'intel_analyst', 'collection_manager'],
-      operations: ['operations_officer', 'watch_officer'],
+      operations: ['operations_officer', 'watch_officer', 'plans_officer'],
       geospatial: ['geospatial_officer'],
       surveillance: ['surveillance_officer'],
       communications: ['comms_officer'],
@@ -155,7 +155,7 @@ Respond with ONLY the agent_id (e.g., "intelligence_officer"). No explanation.`;
   /**
    * Route a message to the appropriate agent and get response
    */
-  async route(message, operator, language = 'auto', sessionId = 'default') {
+  async route(message, operator, language = 'auto', sessionId = 'default', opts = {}) {
     // Auto-detect language if not specified
     let detectedLanguage = language;
     if (language === 'auto' || !language) {
@@ -165,7 +165,7 @@ Respond with ONLY the agent_id (e.g., "intelligence_officer"). No explanation.`;
     // Check for emergency keywords (triggers priority handling)
     const isEmergency = this.language.isEmergency(message);
     
-    const agentId = await this.determineAgent(message, operator);
+    const agentId = opts.forceAgent || await this.determineAgent(message, operator);
     const agent = this.agents[agentId];
 
     if (!agent) {
@@ -198,9 +198,28 @@ Respond with ONLY the agent_id (e.g., "intelligence_officer"). No explanation.`;
     const languageContext = this.language.getLanguageContext(detectedLanguage);
     const languageInfo = this.language.getLanguageInfo(detectedLanguage);
     
+    // Build mission context if available
+    const missionBlock = opts.missionContext ? `
+## ACTIVE MISSION: ${opts.missionContext.missionName}
+Status: ${opts.missionContext.missionStatus}
+
+### OPERATIONS ORDER
+${opts.missionContext.opordText}
+
+### METT-TC ANALYSIS
+${opts.missionContext.mettTc}
+
+### TASK ASSIGNMENTS
+${opts.missionContext.taskings}
+
+### MAP OVERLAYS
+${opts.missionContext.overlays}
+` : '';
+
     const systemPrompt = `${agent.soul}
 
 ${operatorContext}
+${missionBlock}
 ${memoryContext}
 ${conversationHistory}
 ${operationalContext}
@@ -214,10 +233,11 @@ Current time: ${new Date().toISOString()}
 
 IMPORTANT: You have memory of past conversations and operational events. Reference them when relevant. If the Operator asks about something you should remember, check your memory context above.`;
 
-    // Get response from agent
+    // Get response from agent — use higher token limit for mission planning
+    const maxTokens = opts.missionContext ? 4096 : 2048;
     const response = await this.anthropic.messages.create({
       model: 'claude-sonnet-4-20250514',
-      max_tokens: 2048,
+      max_tokens: maxTokens,
       system: systemPrompt,
       messages: [{ role: 'user', content: message }]
     });
