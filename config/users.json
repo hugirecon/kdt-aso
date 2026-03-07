@@ -3,7 +3,7 @@
     {
       "id": "admin",
       "username": "admin",
-      "passwordHash": "$2b$10$s3Q92xXjcIhJmzZy/paJzejQGgr/G94HUXXImCaa4bYZeM9i4UHm.",
+      "passwordHash": "$2b$12$c7TWNVSPyddgg5sRNrHWOeUMVRQXuSAZTDmAGyyKqHi4HuXbso4EW",
       "name": "Administrator",
       "title": "System Administrator",
       "role": "admin",

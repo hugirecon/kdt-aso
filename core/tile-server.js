@@ -5,6 +5,7 @@
 
 const path = require('path');
 const fs = require('fs');
+const { validatePathComponent } = require('./security');
 
 // PMTiles JS library for reading tile archives
 let PMTiles, FetchSource;
@@ -46,6 +47,12 @@ class TileServer {
   registerRoutes(app) {
     // Serve tile JSON metadata
     app.get('/tiles/:archive/metadata', (req, res) => {
+      try {
+        validatePathComponent(req.params.archive, 'archive name');
+      } catch (err) {
+        return res.status(400).json({ error: 'Invalid archive name' });
+      }
+      
       const archivePath = this.archives.get(req.params.archive);
       if (!archivePath) {
         return res.status(404).json({ error: 'Archive not found' });
@@ -76,6 +83,12 @@ class TileServer {
 
     // Serve PMTiles directly as static files for the pmtiles JS protocol
     app.get('/tiles/:archive.pmtiles', (req, res) => {
+      try {
+        validatePathComponent(req.params.archive, 'archive name');
+      } catch (err) {
+        return res.status(400).send('Invalid archive name');
+      }
+      
       const archivePath = this.archives.get(req.params.archive);
       if (!archivePath || !fs.existsSync(archivePath)) {
         return res.status(404).send('Not found');
