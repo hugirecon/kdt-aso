@@ -44,22 +44,29 @@ class AuthManager {
       return JSON.parse(fs.readFileSync(this.usersPath, 'utf-8'));
     }
     // Create default admin user if no users exist
+    const securePassword = crypto.randomBytes(16).toString('base64');
     const defaultUsers = {
       users: [
         {
           id: 'admin',
           username: 'admin',
-          passwordHash: bcrypt.hashSync('admin', BCRYPT_ROUNDS), // Change immediately in production
+          passwordHash: bcrypt.hashSync(securePassword, BCRYPT_ROUNDS),
           name: 'Administrator',
           title: 'System Administrator',
           role: 'admin',
           access: ['hero', 'operations', 'surveillance', 'geospatial', 'communications', 'logistics', 'admin'],
-          createdAt: new Date().toISOString()
+          createdAt: new Date().toISOString(),
+          mustChangePassword: true // Force password change on first login
         }
       ]
     };
     this.saveUsers(defaultUsers);
-    console.log('Created default admin user (username: admin, password: admin) — CHANGE IMMEDIATELY');
+    console.log(`╔═══════════════════════════════════════════════════════════╗`);
+    console.log(`║  DEFAULT ADMIN CREDENTIALS (SAVE THESE SECURELY)         ║`);
+    console.log(`║  Username: admin                                         ║`);
+    console.log(`║  Password: ${securePassword}                        ║`);
+    console.log(`║  ** MUST CHANGE PASSWORD ON FIRST LOGIN **              ║`);
+    console.log(`╚═══════════════════════════════════════════════════════════╝`);
     return defaultUsers;
   }
 
@@ -75,13 +82,25 @@ class AuthManager {
    */
   async authenticate(username, password) {
     const user = this.users.users.find(u => u.username === username);
-    if (!user) {
+    
+    // Always run bcrypt.compare even if user doesn't exist to prevent timing attacks
+    const dummyHash = '$2b$12$c7TWNVSPyddgg5sRNrHWOeUMVRQXuSAZTDmAGyyKqHi4HuXbso4EW'; // dummy hash
+    const providedPasswordHash = user ? user.passwordHash : dummyHash;
+    
+    const validPassword = await bcrypt.compare(password, providedPasswordHash);
+    
+    if (!user || !validPassword) {
       return { success: false, error: 'Invalid credentials' };
     }
 
-    const validPassword = await bcrypt.compare(password, user.passwordHash);
-    if (!validPassword) {
-      return { success: false, error: 'Invalid credentials' };
+    // Check if user must change password
+    if (user.mustChangePassword) {
+      return { 
+        success: false, 
+        error: 'Password change required',
+        mustChangePassword: true,
+        userId: user.id
+      };
     }
 
     // Generate unique token ID for revocation support
@@ -231,6 +250,27 @@ class AuthManager {
     }
 
     user.passwordHash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
+    user.mustChangePassword = false; // Clear the flag once password is changed
+    this.saveUsers();
+
+    return { success: true };
+  }
+
+  /**
+   * Force password change (admin only)
+   */
+  async forcePasswordChange(userId, newPassword, adminRole = 'admin') {
+    if (adminRole !== 'admin') {
+      return { success: false, error: 'Admin access required' };
+    }
+
+    const user = this.users.users.find(u => u.id === userId);
+    if (!user) {
+      return { success: false, error: 'User not found' };
+    }
+
+    user.passwordHash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
+    user.mustChangePassword = false;
     this.saveUsers();
 
     return { success: true };

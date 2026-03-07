@@ -329,20 +329,22 @@ app.post('/api/auth/login', authLimiter, async (req, res) => {
       maxAge: 8 * 60 * 60 * 1000,  // 8 hours (reduced from 24)
       path: '/'
     });
-  } else {
-    // Record failed attempt
-    accountLockout.recordFailure(ipKey);
-    accountLockout.recordFailure(userKey);
-    securityAudit.logAuth('login_failed', `User: ${username}`, req.ip, null, false);
-    securityMonitor.recordFailedLogin(req.ip, username);
-  }
-  
-  // Strip the token from the response body — it's already set as an httpOnly cookie.
-  // Exposing it in JSON defeats the purpose of httpOnly (XSS could read it).
-  if (result.success) {
+    
+    // Strip the token from the response body — it's already set as an httpOnly cookie.
+    // Exposing it in JSON defeats the purpose of httpOnly (XSS could read it).
     const { token, ...safeResult } = result;
     res.json(safeResult);
   } else {
+    // Record failed attempt (except for password change required)
+    if (!result.mustChangePassword) {
+      accountLockout.recordFailure(ipKey);
+      accountLockout.recordFailure(userKey);
+      securityAudit.logAuth('login_failed', `User: ${username}`, req.ip, null, false);
+      securityMonitor.recordFailedLogin(req.ip, username);
+    } else {
+      securityAudit.logAuth('login_password_change_required', `User: ${username}`, req.ip, result.userId, false);
+    }
+    
     res.json(result);
   }
 });
@@ -366,6 +368,32 @@ app.post('/api/auth/logout', (req, res) => {
 
 app.get('/api/auth/me', authMiddleware(authManager), (req, res) => {
   res.json({ user: req.user });
+});
+
+// Force password change endpoint (for users who must change password)
+app.post('/api/auth/change-password', authLimiter, async (req, res) => {
+  const { userId, oldPassword, newPassword } = req.body;
+  
+  if (!userId || !oldPassword || !newPassword) {
+    return res.status(400).json({ error: 'User ID, old password, and new password required' });
+  }
+
+  if (newPassword.length < 8) {
+    return res.status(400).json({ error: 'New password must be at least 8 characters long' });
+  }
+
+  try {
+    const result = await authManager.changePassword(userId, oldPassword, newPassword);
+    if (result.success) {
+      securityAudit.logAuth('password_change_success', `User: ${userId}`, req.ip, userId, true);
+      res.json({ success: true, message: 'Password changed successfully' });
+    } else {
+      securityAudit.logAuth('password_change_failed', `User: ${userId}`, req.ip, userId, false);
+      res.status(400).json(result);
+    }
+  } catch (error) {
+    res.status(500).json({ error: 'Password change failed' });
+  }
 });
 
 // Tile server routes (before auth — tiles are public)
