@@ -3,6 +3,10 @@
 
 FROM node:20-alpine
 
+# Security: add non-root user (even in dev)
+RUN addgroup -g 1001 -S kdt && \
+    adduser -S kdt -u 1001 -G kdt
+
 WORKDIR /app
 
 # Install dependencies for both backend and dashboard
@@ -17,6 +21,13 @@ COPY . .
 
 # Install nodemon for hot-reload
 RUN npm install -g nodemon concurrently
+
+# Create required dirs and set ownership
+RUN mkdir -p logs memory documents backups audio config/keys && \
+    chown -R kdt:kdt /app
+
+# Run as non-root even in dev
+USER kdt
 
 # Expose ports
 EXPOSE 3001 3002

@@ -9,6 +9,7 @@ const crypto = require('crypto');
 const { createReadStream, createWriteStream } = require('fs');
 const { pipeline } = require('stream/promises');
 const zlib = require('zlib');
+const { validatePathComponent } = require('./security');
 
 class BackupSystem {
   constructor(options = {}) {
@@ -189,6 +190,7 @@ class BackupSystem {
    * Restore from backup
    */
   async restore(backupId, options = {}) {
+    validatePathComponent(backupId, 'backupId');
     const { dryRun = false, sources = null } = options;
     
     const compressedPath = path.join(this.backupDir, `${backupId}.tar.gz`);
@@ -263,6 +265,7 @@ class BackupSystem {
    * Delete a backup
    */
   async deleteBackup(backupId) {
+    validatePathComponent(backupId, 'backupId');
     const compressedPath = path.join(this.backupDir, `${backupId}.tar.gz`);
     await fs.unlink(compressedPath);
     return true;
@@ -292,6 +295,7 @@ class BackupSystem {
    * Get backup info
    */
   async getBackupInfo(backupId) {
+    validatePathComponent(backupId, 'backupId');
     const compressedPath = path.join(this.backupDir, `${backupId}.tar.gz`);
     const extractPath = path.join(this.backupDir, `_info_${backupId}`);
     

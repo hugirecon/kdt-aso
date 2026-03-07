@@ -1119,7 +1119,7 @@ app.get('/api/backups', authMiddleware(authManager), adminAuth, async (req, res)
   }
 });
 
-app.post('/api/backups', authMiddleware(authManager), sensitiveOpLimiter, async (req, res) => {
+app.post('/api/backups', authMiddleware(authManager), adminAuth, sensitiveOpLimiter, async (req, res) => {
   try {
     const backup = await backupSystem.createBackup(req.body);
     securityAudit.logAccess('backup_create', '/api/backups', req.ip, req.user?.id, 'POST');
@@ -1129,7 +1129,7 @@ app.post('/api/backups', authMiddleware(authManager), sensitiveOpLimiter, async 
   }
 });
 
-app.get('/api/backups/:id', authMiddleware(authManager), async (req, res) => {
+app.get('/api/backups/:id', authMiddleware(authManager), adminAuth, async (req, res) => {
   try {
     const info = await backupSystem.getBackupInfo(req.params.id);
     res.json(info);
@@ -1138,7 +1138,7 @@ app.get('/api/backups/:id', authMiddleware(authManager), async (req, res) => {
   }
 });
 
-app.post('/api/backups/:id/restore', authMiddleware(authManager), sensitiveOpLimiter, async (req, res) => {
+app.post('/api/backups/:id/restore', authMiddleware(authManager), adminAuth, sensitiveOpLimiter, async (req, res) => {
   try {
     securityAudit.logAccess('backup_restore', `/api/backups/${req.params.id}/restore`, req.ip, req.user?.id, 'POST');
     const result = await backupSystem.restore(req.params.id, req.body);
@@ -1148,7 +1148,7 @@ app.post('/api/backups/:id/restore', authMiddleware(authManager), sensitiveOpLim
   }
 });
 
-app.delete('/api/backups/:id', authMiddleware(authManager), async (req, res) => {
+app.delete('/api/backups/:id', authMiddleware(authManager), adminAuth, async (req, res) => {
   try {
     await backupSystem.deleteBackup(req.params.id);
     res.json({ success: true });

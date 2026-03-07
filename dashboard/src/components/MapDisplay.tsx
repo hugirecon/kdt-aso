@@ -4,6 +4,16 @@ import 'maplibre-gl/dist/maplibre-gl.css'
 import { Protocol } from 'pmtiles'
 import { layers, namedFlavor } from '@protomaps/basemaps'
 
+/** Escape HTML entities to prevent XSS in map popups */
+function escHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
 // Error Boundary to prevent map crashes from killing the app
 interface ErrorBoundaryState { hasError: boolean; error: string | null }
 class MapErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryState> {
@@ -424,9 +434,9 @@ const MapDisplay: React.FC<MapDisplayProps> = ({
       const popup = new maplibregl.Popup({ offset: 14, closeButton: true, closeOnClick: false, className: 'kdt-popup' })
         .setHTML(`
           <div style="background:#14141e;color:#fff;padding:8px 12px;border-radius:6px;font-family:'Inter',sans-serif;font-size:13px;border:1px solid #2a2a35;min-width:120px;">
-            <div style="font-weight:600;margin-bottom:4px;color:${color};text-transform:uppercase;font-size:10px;letter-spacing:0.5px;">${marker.type}</div>
-            <div style="font-weight:500;">${marker.label}</div>
-            ${marker.details ? `<div style="color:#a0a0b0;margin-top:4px;font-size:12px;">${marker.details}</div>` : ''}
+            <div style="font-weight:600;margin-bottom:4px;color:${color};text-transform:uppercase;font-size:10px;letter-spacing:0.5px;">${escHtml(marker.type)}</div>
+            <div style="font-weight:500;">${escHtml(marker.label)}</div>
+            ${marker.details ? `<div style="color:#a0a0b0;margin-top:4px;font-size:12px;">${escHtml(marker.details)}</div>` : ''}
             <div style="color:#606070;margin-top:4px;font-size:11px;font-family:monospace;">${marker.position[0].toFixed(6)}, ${marker.position[1].toFixed(6)}</div>
           </div>
         `)
