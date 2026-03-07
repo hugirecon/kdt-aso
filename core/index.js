@@ -1524,7 +1524,8 @@ app.post('/api/missions/:id/generate-overlays', authMiddleware(authManager), asy
     ).join('\n');
 
     const Anthropic = require('@anthropic-ai/sdk');
-    const anthropic = new Anthropic();
+    const { getAnthropicApiKey } = require('../scripts/get-api-key');
+    const anthropic = new Anthropic({ apiKey: getAnthropicApiKey() });
 
     const response = await anthropic.messages.create({
       model: 'claude-sonnet-4-20250514',
@@ -1706,7 +1707,8 @@ Current time: ${new Date().toISOString()}`;
     messages.push({ role: 'user', content: message });
 
     const Anthropic = require('@anthropic-ai/sdk');
-    const anthropic = new Anthropic();
+    const { getAnthropicApiKey } = require('../scripts/get-api-key');
+    const anthropic = new Anthropic({ apiKey: getAnthropicApiKey() });
     
     const response = await anthropic.messages.create({
       model: 'claude-sonnet-4-20250514',

@@ -9,10 +9,11 @@ const path = require('path');
 const yaml = require('yaml');
 const MemoryManager = require('./memory');
 const LanguageSupport = require('./languages');
+const { getAnthropicApiKey } = require('../scripts/get-api-key');
 
 class AgentRouter {
   constructor() {
-    this.anthropic = new Anthropic();
+    this.anthropic = new Anthropic({ apiKey: getAnthropicApiKey() });
     this.agents = this.loadAgents();
     this.systemConfig = this.loadConfig();
     this.memory = new MemoryManager();
