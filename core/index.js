@@ -1308,7 +1308,14 @@ app.delete('/api/admin/users/:id', authMiddleware(authManager), adminAuth, async
 
 app.post('/api/admin/users/:id/password', authMiddleware(authManager), adminAuth, async (req, res) => {
   try {
-    await adminSystem.changePassword(req.params.id, req.body.password);
+    const password = req.body.password;
+    if (!password || password.length < 12) {
+      return res.status(400).json({ error: 'Password must be at least 12 characters' });
+    }
+    if (!/[A-Z]/.test(password) || !/[a-z]/.test(password) || !/[0-9]/.test(password)) {
+      return res.status(400).json({ error: 'Password must contain uppercase, lowercase, and numeric characters' });
+    }
+    await adminSystem.changePassword(req.params.id, password);
     await adminSystem.logAction(req.user.id, 'user.password_change', { targetUser: req.params.id });
 
     // Session rotation: revoke all sessions after password change
