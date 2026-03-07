@@ -124,8 +124,11 @@ app.use(securityHeaders);
 // 2. IP allowlist (if enabled)
 app.use(ipAllowlist.middleware());
 
-// 3. CORS (locked down)
-app.use(cors(corsOptions));
+// 3. CORS (locked down) — health check exempt for Docker/load balancers
+app.use((req, res, next) => {
+  if (req.path === '/api/health') return next();
+  cors(corsOptions)(req, res, next);
+});
 
 // 4. Body parsing with size limits
 app.use(express.json({ limit: MAX_BODY_SIZE }));

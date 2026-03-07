@@ -326,7 +326,7 @@ class AuthManager {
 function authMiddleware(authManager) {
   return (req, res, next) => {
     // Skip auth for public endpoints
-    const publicPaths = ['/auth/login', '/status', '/api/auth/login', '/api/status'];
+    const publicPaths = ['/auth/login', '/status', '/api/auth/login', '/api/status', '/api/health', '/health'];
     if (publicPaths.some(p => req.path === p || req.path.endsWith(p))) {
       return next();
     }
