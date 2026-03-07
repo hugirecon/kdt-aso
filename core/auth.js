@@ -26,6 +26,21 @@ const crypto = require('crypto');
 const BCRYPT_ROUNDS = 12;  // Increased from 10
 const JWT_EXPIRY = '8h';   // Reduced from 24h
 
+/**
+ * Validate password strength
+ * Requires: ≥12 chars, uppercase, lowercase, digit, special char
+ */
+function validatePasswordStrength(password) {
+  if (typeof password !== 'string') return 'Password must be a string';
+  if (password.length < 12) return 'Password must be at least 12 characters';
+  if (password.length > 128) return 'Password must be at most 128 characters';
+  if (!/[A-Z]/.test(password)) return 'Password must contain an uppercase letter';
+  if (!/[a-z]/.test(password)) return 'Password must contain a lowercase letter';
+  if (!/[0-9]/.test(password)) return 'Password must contain a digit';
+  if (!/[^A-Za-z0-9]/.test(password)) return 'Password must contain a special character';
+  return null; // valid
+}
+
 // External blacklist/session limiter — set via AuthManager.setBlacklist() / setSessionLimiter()
 let _jwtBlacklist = null;
 let _sessionLimiter = null;
@@ -209,6 +224,12 @@ class AuthManager {
       return { success: false, error: 'Username already exists' };
     }
 
+    // Validate password strength
+    const pwError = validatePasswordStrength(userData.password);
+    if (pwError) {
+      return { success: false, error: pwError };
+    }
+
     const newUser = {
       id: `user-${Date.now()}`,
       username: userData.username,
@@ -249,6 +270,12 @@ class AuthManager {
       return { success: false, error: 'Invalid current password' };
     }
 
+    // Validate new password strength
+    const pwError = validatePasswordStrength(newPassword);
+    if (pwError) {
+      return { success: false, error: pwError };
+    }
+
     user.passwordHash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
     user.mustChangePassword = false; // Clear the flag once password is changed
     this.saveUsers();
@@ -267,6 +294,12 @@ class AuthManager {
     const user = this.users.users.find(u => u.id === userId);
     if (!user) {
       return { success: false, error: 'User not found' };
+    }
+
+    // Validate new password strength even for admin resets
+    const pwError = validatePasswordStrength(newPassword);
+    if (pwError) {
+      return { success: false, error: pwError };
     }
 
     user.passwordHash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);

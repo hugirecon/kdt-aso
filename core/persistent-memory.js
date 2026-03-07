@@ -51,6 +51,7 @@ class PersistentMemory {
    * Save agent memory
    */
   async saveAgentMemory(agentId, memory) {
+    validatePathComponent(agentId, 'agentId');
     const filePath = path.join(this.agentMemoryDir, `${agentId}.json`);
     const data = {
       agentId,
@@ -68,6 +69,7 @@ class PersistentMemory {
    * Load agent memory
    */
   async loadAgentMemory(agentId) {
+    validatePathComponent(agentId, 'agentId');
     // Check cache
     const cached = this.cache.get(`agent:${agentId}`);
     if (cached && Date.now() - cached.timestamp < this.cacheTimeout) {
@@ -136,6 +138,7 @@ class PersistentMemory {
    * Save conversation
    */
   async saveConversation(sessionId, messages) {
+    validatePathComponent(sessionId, 'sessionId');
     const filePath = path.join(this.conversationMemoryDir, `${sessionId}.json`);
     const data = {
       sessionId,
@@ -152,6 +155,7 @@ class PersistentMemory {
    * Load conversation
    */
   async loadConversation(sessionId) {
+    validatePathComponent(sessionId, 'sessionId');
     const filePath = path.join(this.conversationMemoryDir, `${sessionId}.json`);
     
     try {
@@ -273,6 +277,7 @@ class PersistentMemory {
    * Add knowledge entry
    */
   async addKnowledge(category, entry) {
+    validatePathComponent(category, 'category');
     const filePath = path.join(this.knowledgeBaseDir, `${category}.json`);
     
     let knowledge = { category, entries: [] };
@@ -299,6 +304,7 @@ class PersistentMemory {
    * Get knowledge by category
    */
   async getKnowledge(category) {
+    validatePathComponent(category, 'category');
     const filePath = path.join(this.knowledgeBaseDir, `${category}.json`);
     
     try {

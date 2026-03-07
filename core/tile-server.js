@@ -7,6 +7,24 @@ const path = require('path');
 const fs = require('fs');
 const { validatePathComponent } = require('./security');
 
+// Resolve allowed origins for tile CORS from environment or default to localhost
+function getTileAllowedOrigins() {
+  const envOrigins = process.env.CORS_ORIGINS;
+  const defaults = ['http://localhost:3001', 'http://localhost:3002', 'http://localhost:5173',
+                     'http://127.0.0.1:3001', 'http://127.0.0.1:3002', 'http://127.0.0.1:5173'];
+  if (envOrigins) {
+    return [...new Set([...defaults, ...envOrigins.split(',').map(o => o.trim())])];
+  }
+  return defaults;
+}
+
+function tileCorsOrigin(req) {
+  const origin = req.headers.origin;
+  if (!origin) return null; // same-origin requests
+  const allowed = getTileAllowedOrigins();
+  return allowed.includes(origin) ? origin : null;
+}
+
 // PMTiles JS library for reading tile archives
 let PMTiles, FetchSource;
 
@@ -61,7 +79,6 @@ class TileServer {
       res.json({
         name: req.params.archive,
         type: 'pmtiles',
-        path: archivePath,
         available: fs.existsSync(archivePath)
       });
     });
@@ -97,6 +114,11 @@ class TileServer {
       const stat = fs.statSync(archivePath);
       const range = req.headers.range;
 
+      const corsOrigin = tileCorsOrigin(req);
+      const corsHeaders = corsOrigin
+        ? { 'Access-Control-Allow-Origin': corsOrigin, 'Vary': 'Origin' }
+        : {};
+
       if (range) {
         // Handle range requests (required by PMTiles protocol)
         const parts = range.replace(/bytes=/, '').split('-');
@@ -110,7 +132,7 @@ class TileServer {
           'Content-Length': chunkSize,
           'Content-Type': 'application/octet-stream',
           'Cache-Control': 'public, max-age=86400',
-          'Access-Control-Allow-Origin': '*',
+          ...corsHeaders,
           'Access-Control-Allow-Headers': 'Range',
           'Access-Control-Expose-Headers': 'Content-Range, Content-Length',
         });
@@ -123,7 +145,7 @@ class TileServer {
           'Content-Type': 'application/octet-stream',
           'Cache-Control': 'public, max-age=86400',
           'Accept-Ranges': 'bytes',
-          'Access-Control-Allow-Origin': '*',
+          ...corsHeaders,
           'Access-Control-Allow-Headers': 'Range',
           'Access-Control-Expose-Headers': 'Content-Range, Content-Length',
         });
@@ -134,8 +156,9 @@ class TileServer {
 
     // Handle CORS preflight for range requests
     app.options('/tiles/:archive.pmtiles', (req, res) => {
+      const corsOrigin = tileCorsOrigin(req);
       res.writeHead(204, {
-        'Access-Control-Allow-Origin': '*',
+        ...(corsOrigin ? { 'Access-Control-Allow-Origin': corsOrigin, 'Vary': 'Origin' } : {}),
         'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
         'Access-Control-Allow-Headers': 'Range',
         'Access-Control-Expose-Headers': 'Content-Range, Content-Length',

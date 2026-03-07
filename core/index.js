@@ -112,6 +112,32 @@ const io = new Server(httpServer, {
 });
 
 // ============================================================
+// SOCKET.IO PER-USER MESSAGE RATE LIMITER (prevent API cost abuse)
+// ============================================================
+const socketRateLimits = new Map(); // socketId -> { count, windowStart }
+const SOCKET_MSG_LIMIT = 20;        // max messages per window
+const SOCKET_MSG_WINDOW = 60 * 1000; // 1 minute window
+
+function checkSocketRateLimit(socketId) {
+  const now = Date.now();
+  let record = socketRateLimits.get(socketId);
+  if (!record || now - record.windowStart > SOCKET_MSG_WINDOW) {
+    record = { count: 0, windowStart: now };
+    socketRateLimits.set(socketId, record);
+  }
+  record.count++;
+  return record.count <= SOCKET_MSG_LIMIT;
+}
+
+// Cleanup stale socket rate limit entries every 5 minutes
+setInterval(() => {
+  const cutoff = Date.now() - SOCKET_MSG_WINDOW * 2;
+  for (const [id, rec] of socketRateLimits.entries()) {
+    if (rec.windowStart < cutoff) socketRateLimits.delete(id);
+  }
+}, 5 * 60 * 1000);
+
+// ============================================================
 // SECURITY MIDDLEWARE STACK (order matters)
 // ============================================================
 
@@ -813,6 +839,10 @@ io.on('connection', (socket) => {
   
   socket.on('message', async (data) => {
     try {
+    // Per-socket rate limiting
+    if (!checkSocketRateLimit(socket.id)) {
+      return socket.emit('response', { agent: 'KDT Aso', content: 'Rate limit exceeded. Please wait before sending more messages.', timestamp: new Date().toISOString() });
+    }
     // Input validation for socket messages
     if (!data || typeof data !== 'object') {
       return socket.emit('response', { agent: 'KDT Aso', content: 'Invalid message format.', timestamp: new Date().toISOString() });
@@ -893,6 +923,7 @@ io.on('connection', (socket) => {
   
   socket.on('disconnect', () => {
     console.log('Dashboard disconnected:', socket.id);
+    socketRateLimits.delete(socket.id);
   });
 });
 
@@ -1079,7 +1110,7 @@ app.post('/api/documents/template/:type', authMiddleware(authManager), async (re
 });
 
 // Backup API Routes
-app.get('/api/backups', authMiddleware(authManager), async (req, res) => {
+app.get('/api/backups', authMiddleware(authManager), adminAuth, async (req, res) => {
   try {
     const backups = await backupSystem.listBackups();
     res.json(backups);

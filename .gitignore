@@ -10,6 +10,9 @@ dashboard/node_modules/
 # Encryption keys (auto-generated per instance)
 config/keys/
 
+# User credentials (password hashes — per-instance)
+config/users.json
+
 # Build output
 dist/
 dashboard/dist/
