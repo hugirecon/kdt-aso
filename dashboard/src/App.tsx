@@ -49,7 +49,7 @@ interface User {
 function App() {
   const [authenticated, setAuthenticated] = useState(false)
   const [user, setUser] = useState<User | null>(null)
-  const [token, setToken] = useState<string | null>(null)
+  // Token is httpOnly cookie — never stored in JS state
   const [checkingAuth, setCheckingAuth] = useState(true)
   
   const [socket, setSocket] = useState<Socket | null>(null)
@@ -162,8 +162,7 @@ function App() {
     return () => { newSocket.close() }
   }, [authenticated])
 
-  const handleLogin = (newToken: string, newUser: User) => {
-    setToken(newToken)
+  const handleLogin = (newUser: User) => {
     setUser(newUser)
     setAuthenticated(true)
   }
@@ -172,7 +171,6 @@ function App() {
     await apiFetch('/api/auth/logout', { method: 'POST' })
     setAuthenticated(false)
     setUser(null)
-    setToken(null)
     setMessages([])
     socket?.close()
   }

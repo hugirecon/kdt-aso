@@ -130,7 +130,7 @@ class AdminSystem {
       }
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 12);
     const user = {
       id: uuidv4(),
       username,
@@ -175,7 +175,7 @@ class AdminSystem {
       throw new Error('User not found');
     }
 
-    user.password = await bcrypt.hash(newPassword, 10);
+    user.password = await bcrypt.hash(newPassword, 12);
     user.updatedAt = new Date().toISOString();
     await this.saveUsers();
   }

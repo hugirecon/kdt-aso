@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { apiFetch } from '../utils/api'
 
 interface LoginProps {
-  onLogin: (token: string, user: any) => void
+  onLogin: (user: any) => void
 }
 
 const Login: React.FC<LoginProps> = ({ onLogin }) => {
@@ -26,7 +26,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
       const data = await response.json()
 
       if (data.success) {
-        onLogin(data.token, data.user)
+        onLogin(data.user)
       } else {
         setError(data.error || 'Login failed')
       }

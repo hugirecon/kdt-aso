@@ -337,10 +337,28 @@ app.post('/api/auth/login', authLimiter, async (req, res) => {
     securityMonitor.recordFailedLogin(req.ip, username);
   }
   
-  res.json(result);
+  // Strip the token from the response body — it's already set as an httpOnly cookie.
+  // Exposing it in JSON defeats the purpose of httpOnly (XSS could read it).
+  if (result.success) {
+    const { token, ...safeResult } = result;
+    res.json(safeResult);
+  } else {
+    res.json(result);
+  }
 });
 
 app.post('/api/auth/logout', (req, res) => {
+  // Extract and blacklist the JWT so it can't be reused even if copied
+  const token = req.headers.authorization?.replace('Bearer ', '') || req.cookies?.token;
+  if (token) {
+    try {
+      const decoded = require('jsonwebtoken').verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
+      if (decoded.jti) {
+        jwtBlacklist.revoke(decoded.jti, decoded.exp ? decoded.exp * 1000 : undefined);
+        sessionLimiter.remove(decoded.id, decoded.jti);
+      }
+    } catch (_) { /* token already invalid — fine */ }
+  }
   securityAudit.logAuth('logout', 'User logged out', req.ip, req.user?.id);
   res.clearCookie('token', { path: '/' });
   res.json({ success: true });
