@@ -338,17 +338,20 @@ app.post('/api/auth/login', authLimiter, async (req, res) => {
     const { token, ...safeResult } = result;
     res.json(safeResult);
   } else {
-    // Record failed attempt (except for password change required)
-    if (!result.mustChangePassword) {
-      accountLockout.recordFailure(ipKey);
-      accountLockout.recordFailure(userKey);
+    // Record failed attempt
+    accountLockout.recordFailure(ipKey);
+    accountLockout.recordFailure(userKey);
+    
+    if (result.mustChangePassword) {
+      securityAudit.logAuth('login_password_change_required', `User: ${username}`, req.ip, result.userId, false);
+      // Return password change requirement but don't expose internal userId
+      res.json({ success: false, error: 'Password change required', mustChangePassword: true });
+    } else {
       securityAudit.logAuth('login_failed', `User: ${username}`, req.ip, null, false);
       securityMonitor.recordFailedLogin(req.ip, username);
-    } else {
-      securityAudit.logAuth('login_password_change_required', `User: ${username}`, req.ip, result.userId, false);
+      // Generic error - don't reveal whether username exists
+      res.json({ success: false, error: 'Invalid credentials' });
     }
-    
-    res.json(result);
   }
 });
 
@@ -374,6 +377,9 @@ app.get('/api/auth/me', authMiddleware(authManager), (req, res) => {
 });
 
 // Force password change endpoint (for users who must change password)
+// Note: This uses authLimiter for rate limiting. Users needing first-time password 
+// change authenticate via oldPassword (their temporary password), so full JWT auth 
+// isn't required. But we validate the old password which acts as authentication.
 app.post('/api/auth/change-password', authLimiter, async (req, res) => {
   const { userId, oldPassword, newPassword } = req.body;
   
@@ -381,18 +387,46 @@ app.post('/api/auth/change-password', authLimiter, async (req, res) => {
     return res.status(400).json({ error: 'User ID, old password, and new password required' });
   }
 
-  if (newPassword.length < 8) {
-    return res.status(400).json({ error: 'New password must be at least 8 characters long' });
+  // Strong password validation
+  if (newPassword.length < 12) {
+    return res.status(400).json({ error: 'New password must be at least 12 characters long' });
+  }
+  if (!/[A-Z]/.test(newPassword) || !/[a-z]/.test(newPassword) || !/[0-9]/.test(newPassword)) {
+    return res.status(400).json({ error: 'New password must contain uppercase, lowercase, and numeric characters' });
+  }
+  if (newPassword === oldPassword) {
+    return res.status(400).json({ error: 'New password must differ from old password' });
+  }
+
+  // Check account lockout
+  const ipKey = `ip:${req.ip}`;
+  const userKey = `user:${userId}`;
+  if (accountLockout.isLocked(ipKey) || accountLockout.isLocked(userKey)) {
+    return res.status(429).json({ error: 'Too many attempts. Try again later.' });
   }
 
   try {
     const result = await authManager.changePassword(userId, oldPassword, newPassword);
     if (result.success) {
+      accountLockout.recordSuccess(ipKey);
+      accountLockout.recordSuccess(userKey);
       securityAudit.logAuth('password_change_success', `User: ${userId}`, req.ip, userId, true);
+      
+      // Revoke all existing sessions after password change
+      const revokedTokens = sessionLimiter.revokeAll(userId);
+      jwtBlacklist.revokeAllForUser(userId);
+      for (const tokenId of revokedTokens) {
+        jwtBlacklist.revoke(tokenId);
+      }
+      
       res.json({ success: true, message: 'Password changed successfully' });
     } else {
+      accountLockout.recordFailure(ipKey);
+      accountLockout.recordFailure(userKey);
       securityAudit.logAuth('password_change_failed', `User: ${userId}`, req.ip, userId, false);
-      res.status(400).json(result);
+      securityMonitor.recordFailedLogin(req.ip, userId);
+      // Don't leak specific error details - just say invalid
+      res.status(400).json({ success: false, error: 'Invalid credentials' });
     }
   } catch (error) {
     res.status(500).json({ error: 'Password change failed' });

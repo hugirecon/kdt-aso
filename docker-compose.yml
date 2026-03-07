@@ -28,6 +28,7 @@ services:
       - PROPERTY_ID=${PROPERTY_ID:-}
       - AGENT_INSTANCE_ID=${AGENT_INSTANCE_ID:-}
       - DASHBOARD_URL=${DASHBOARD_URL:-http://localhost:3001}
+      - VITE_MAPTILER_KEY=${VITE_MAPTILER_KEY:-}
     volumes:
       - ./logs:/app/logs
       - ./audio:/app/audio

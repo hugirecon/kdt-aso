@@ -219,7 +219,7 @@ const MapDisplay: React.FC<MapDisplayProps> = ({
       if (cancelled) return
 
       try {
-        const MAPTILER_KEY = '0annVpAwdNB2txEpevo0'
+        const MAPTILER_KEY = import.meta.env.VITE_MAPTILER_KEY || ''
         let style: maplibregl.StyleSpecification | string
 
         // Primary: MapTiler Satellite Hybrid (satellite imagery + labels)

@@ -18,6 +18,10 @@ COPY dashboard/package*.json ./dashboard/
 RUN cd dashboard && npm ci && npm cache clean --force
 
 COPY dashboard/ ./dashboard/
+
+# Pass MapTiler key as build arg for Vite
+ARG VITE_MAPTILER_KEY=""
+ENV VITE_MAPTILER_KEY=$VITE_MAPTILER_KEY
 RUN cd dashboard && npm run build
 
 # Copy application
