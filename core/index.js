@@ -386,7 +386,7 @@ app.get('/api/status', (req, res) => {
   }
 });
 
-app.post('/api/message', async (req, res) => {
+app.post('/api/message', authMiddleware(authManager), async (req, res) => {
   const { operatorId, message, language, sessionId } = req.body;
   
   try {
@@ -408,16 +408,16 @@ app.post('/api/message', async (req, res) => {
   }
 });
 
-app.get('/api/agents', (req, res) => {
+app.get('/api/agents', authMiddleware(authManager), (req, res) => {
   res.json(agentRouter.getAgentStatus());
 });
 
-app.get('/api/standing-orders', (req, res) => {
+app.get('/api/standing-orders', authMiddleware(authManager), (req, res) => {
   res.json(standingOrders.list());
 });
 
 // Trigger a standing order manually (for testing or manual intervention)
-app.post('/api/standing-orders/trigger', async (req, res) => {
+app.post('/api/standing-orders/trigger', authMiddleware(authManager), async (req, res) => {
   const { trigger, context } = req.body;
   
   try {
@@ -435,13 +435,13 @@ app.post('/api/standing-orders/trigger', async (req, res) => {
 });
 
 // Get standing order logs
-app.get('/api/standing-orders/logs', (req, res) => {
+app.get('/api/standing-orders/logs', authMiddleware(authManager), (req, res) => {
   const limit = parseInt(req.query.limit) || 100;
   res.json(standingOrders.getLogs(limit));
 });
 
 // Get a specific standing order
-app.get('/api/standing-orders/:id', (req, res) => {
+app.get('/api/standing-orders/:id', authMiddleware(authManager), (req, res) => {
   const order = standingOrders.orders[req.params.id];
   if (order) {
     res.json({ id: req.params.id, ...order });
@@ -467,32 +467,32 @@ const geoData = {
 };
 
 // Geospatial API Routes
-app.get('/api/geo/data', (req, res) => {
+app.get('/api/geo/data', authMiddleware(authManager), (req, res) => {
   res.json(geoData);
 });
 
-app.post('/api/geo/marker', (req, res) => {
+app.post('/api/geo/marker', authMiddleware(authManager), (req, res) => {
   const marker = { ...req.body, id: req.body.id || `marker-${Date.now()}` };
   geoData.markers.push(marker);
   io.emit('geo:marker:add', marker);
   res.json(marker);
 });
 
-app.delete('/api/geo/marker/:id', (req, res) => {
+app.delete('/api/geo/marker/:id', authMiddleware(authManager), (req, res) => {
   const { id } = req.params;
   geoData.markers = geoData.markers.filter(m => m.id !== id);
   io.emit('geo:marker:remove', id);
   res.json({ success: true });
 });
 
-app.post('/api/geo/area', (req, res) => {
+app.post('/api/geo/area', authMiddleware(authManager), (req, res) => {
   const area = { ...req.body, id: req.body.id || `area-${Date.now()}` };
   geoData.areas.push(area);
   io.emit('geo:area:add', area);
   res.json(area);
 });
 
-app.post('/api/geo/center', (req, res) => {
+app.post('/api/geo/center', authMiddleware(authManager), (req, res) => {
   const { center } = req.body;
   geoData.center = center;
   io.emit('geo:center', center);
@@ -500,7 +500,7 @@ app.post('/api/geo/center', (req, res) => {
 });
 
 // Alert API Routes
-app.get('/api/alerts', (req, res) => {
+app.get('/api/alerts', authMiddleware(authManager), (req, res) => {
   const filters = {
     priority: req.query.priority,
     category: req.query.category,
@@ -509,11 +509,11 @@ app.get('/api/alerts', (req, res) => {
   res.json(alertSystem.getActive(filters));
 });
 
-app.get('/api/alerts/counts', (req, res) => {
+app.get('/api/alerts/counts', authMiddleware(authManager), (req, res) => {
   res.json(alertSystem.getCounts());
 });
 
-app.get('/api/alerts/history', (req, res) => {
+app.get('/api/alerts/history', authMiddleware(authManager), (req, res) => {
   const limit = parseInt(req.query.limit) || 100;
   const filters = {
     priority: req.query.priority,
@@ -524,7 +524,7 @@ app.get('/api/alerts/history', (req, res) => {
   res.json(alertSystem.getHistory(limit, filters));
 });
 
-app.get('/api/alerts/:id', (req, res) => {
+app.get('/api/alerts/:id', authMiddleware(authManager), (req, res) => {
   const alert = alertSystem.get(req.params.id);
   if (alert) {
     res.json(alert);
@@ -533,7 +533,7 @@ app.get('/api/alerts/:id', (req, res) => {
   }
 });
 
-app.post('/api/alerts', (req, res) => {
+app.post('/api/alerts', authMiddleware(authManager), (req, res) => {
   try {
     const alert = alertSystem.create(req.body);
     res.json(alert);
@@ -542,7 +542,7 @@ app.post('/api/alerts', (req, res) => {
   }
 });
 
-app.post('/api/alerts/:id/acknowledge', (req, res) => {
+app.post('/api/alerts/:id/acknowledge', authMiddleware(authManager), (req, res) => {
   const { note } = req.body;
   const userId = req.user?.id || 'unknown';
   const alert = alertSystem.acknowledge(req.params.id, userId, note);
@@ -554,7 +554,7 @@ app.post('/api/alerts/:id/acknowledge', (req, res) => {
   }
 });
 
-app.post('/api/alerts/:id/resolve', (req, res) => {
+app.post('/api/alerts/:id/resolve', authMiddleware(authManager), (req, res) => {
   const { resolution } = req.body;
   const userId = req.user?.id || 'unknown';
   const alert = alertSystem.resolve(req.params.id, userId, resolution);
@@ -566,7 +566,7 @@ app.post('/api/alerts/:id/resolve', (req, res) => {
   }
 });
 
-app.post('/api/alerts/:id/escalate', (req, res) => {
+app.post('/api/alerts/:id/escalate', authMiddleware(authManager), (req, res) => {
   const { reason } = req.body;
   const alert = alertSystem.escalate(req.params.id, reason || 'Manual escalation');
   
@@ -577,7 +577,7 @@ app.post('/api/alerts/:id/escalate', (req, res) => {
   }
 });
 
-app.post('/api/alerts/:id/note', (req, res) => {
+app.post('/api/alerts/:id/note', authMiddleware(authManager), (req, res) => {
   const { text } = req.body;
   const userId = req.user?.id || 'unknown';
   const alert = alertSystem.addNote(req.params.id, userId, text);
@@ -589,7 +589,7 @@ app.post('/api/alerts/:id/note', (req, res) => {
   }
 });
 
-app.post('/api/alerts/:id/assign', (req, res) => {
+app.post('/api/alerts/:id/assign', authMiddleware(authManager), (req, res) => {
   const { assignee } = req.body;
   const alert = alertSystem.assign(req.params.id, assignee);
   
@@ -601,7 +601,7 @@ app.post('/api/alerts/:id/assign', (req, res) => {
 });
 
 // Sensor API Routes
-app.get('/api/sensors', (req, res) => {
+app.get('/api/sensors', authMiddleware(authManager), (req, res) => {
   const filters = {
     type: req.query.type,
     zone: req.query.zone,
@@ -610,19 +610,19 @@ app.get('/api/sensors', (req, res) => {
   res.json(sensorSystem.list(filters));
 });
 
-app.get('/api/sensors/counts', (req, res) => {
+app.get('/api/sensors/counts', authMiddleware(authManager), (req, res) => {
   res.json(sensorSystem.getCounts());
 });
 
-app.get('/api/sensors/types', (req, res) => {
+app.get('/api/sensors/types', authMiddleware(authManager), (req, res) => {
   res.json(sensorSystem.sensorTypes);
 });
 
-app.get('/api/sensors/latest', (req, res) => {
+app.get('/api/sensors/latest', authMiddleware(authManager), (req, res) => {
   res.json(sensorSystem.getLatestData());
 });
 
-app.get('/api/sensors/:id', (req, res) => {
+app.get('/api/sensors/:id', authMiddleware(authManager), (req, res) => {
   const sensor = sensorSystem.get(req.params.id);
   if (sensor) {
     res.json(sensor);
@@ -631,13 +631,13 @@ app.get('/api/sensors/:id', (req, res) => {
   }
 });
 
-app.get('/api/sensors/:id/data', (req, res) => {
+app.get('/api/sensors/:id/data', authMiddleware(authManager), (req, res) => {
   const limit = parseInt(req.query.limit) || 50;
   const data = sensorSystem.getBuffer(req.params.id, limit);
   res.json(data);
 });
 
-app.post('/api/sensors/register', (req, res) => {
+app.post('/api/sensors/register', authMiddleware(authManager), (req, res) => {
   try {
     const sensor = sensorSystem.register(req.body);
     res.json(sensor);
@@ -646,7 +646,7 @@ app.post('/api/sensors/register', (req, res) => {
   }
 });
 
-app.post('/api/sensors/:id/ingest', (req, res) => {
+app.post('/api/sensors/:id/ingest', authMiddleware(authManager), (req, res) => {
   try {
     const data = sensorSystem.ingest(req.params.id, req.body);
     res.json({ success: true, data });
@@ -655,7 +655,7 @@ app.post('/api/sensors/:id/ingest', (req, res) => {
   }
 });
 
-app.delete('/api/sensors/:id', (req, res) => {
+app.delete('/api/sensors/:id', authMiddleware(authManager), (req, res) => {
   const success = sensorSystem.unregister(req.params.id);
   if (success) {
     res.json({ success: true });
@@ -665,12 +665,12 @@ app.delete('/api/sensors/:id', (req, res) => {
 });
 
 // Geofence management
-app.get('/api/geofences', (req, res) => {
+app.get('/api/geofences', authMiddleware(authManager), (req, res) => {
   const geofences = Array.from(sensorSystem.geofences.entries()).map(([id, gf]) => ({ id, ...gf }));
   res.json(geofences);
 });
 
-app.post('/api/geofences', (req, res) => {
+app.post('/api/geofences', authMiddleware(authManager), (req, res) => {
   const { id, ...geofence } = req.body;
   const gfId = id || `gf-${Date.now()}`;
   sensorSystem.addGeofence(gfId, geofence);
@@ -678,7 +678,7 @@ app.post('/api/geofences', (req, res) => {
 });
 
 // Watchlist management
-app.post('/api/watchlist/:type', (req, res) => {
+app.post('/api/watchlist/:type', authMiddleware(authManager), (req, res) => {
   const { type } = req.params;
   const { id, ...data } = req.body;
   sensorSystem.addToWatchlist(type, id, data);
@@ -686,7 +686,7 @@ app.post('/api/watchlist/:type', (req, res) => {
 });
 
 // Voice API Routes
-app.get('/api/voice/status', (req, res) => {
+app.get('/api/voice/status', authMiddleware(authManager), (req, res) => {
   res.json({
     enabled: voiceInterface.isEnabled(),
     profiles: Object.keys(voiceInterface.voiceProfiles)
@@ -695,7 +695,7 @@ app.get('/api/voice/status', (req, res) => {
 
 // STT handled client-side via browser Web Speech API (no server endpoint needed)
 
-app.post('/api/voice/speak', async (req, res) => {
+app.post('/api/voice/speak', authMiddleware(authManager), async (req, res) => {
   try {
     if (!voiceInterface.isEnabled()) {
       return res.status(503).json({ error: 'Voice interface not enabled' });
@@ -730,6 +730,19 @@ io.on('connection', (socket) => {
   
   socket.on('message', async (data) => {
     try {
+    // Input validation for socket messages
+    if (!data || typeof data !== 'object') {
+      return socket.emit('response', { agent: 'KDT Aso', content: 'Invalid message format.', timestamp: new Date().toISOString() });
+    }
+    if (typeof data.message !== 'string' || data.message.length === 0 || data.message.length > 10000) {
+      return socket.emit('response', { agent: 'KDT Aso', content: 'Message must be a string between 1 and 10,000 characters.', timestamp: new Date().toISOString() });
+    }
+    if (data.language && (typeof data.language !== 'string' || data.language.length > 10)) {
+      return socket.emit('response', { agent: 'KDT Aso', content: 'Invalid language code.', timestamp: new Date().toISOString() });
+    }
+    if (data.missionId && (typeof data.missionId !== 'string' || data.missionId.length > 100)) {
+      return socket.emit('response', { agent: 'KDT Aso', content: 'Invalid mission ID.', timestamp: new Date().toISOString() });
+    }
     console.log('[CHAT] Message received:', JSON.stringify({ message: data.message?.substring(0, 50), missionId: data.missionId }));
     const { message, language, voiceEnabled, missionId } = data;
     const operator = operatorManager.getOperator(socket.operatorId);
@@ -881,11 +894,11 @@ httpServer.listen(PORT, () => {
 });
 
 // Memory API Routes
-app.get('/api/memory/stats', (req, res) => {
+app.get('/api/memory/stats', authMiddleware(authManager), (req, res) => {
   persistentMemory.getStats().then(stats => res.json(stats)).catch(err => res.status(500).json({ error: err.message }));
 });
 
-app.get('/api/memory/agent/:agentId', pathTraversalGuard(['agentId']), async (req, res) => {
+app.get('/api/memory/agent/:agentId', authMiddleware(authManager), pathTraversalGuard(['agentId']), async (req, res) => {
   try {
     const memory = await persistentMemory.loadAgentMemory(req.params.agentId);
     res.json(memory);
@@ -894,7 +907,7 @@ app.get('/api/memory/agent/:agentId', pathTraversalGuard(['agentId']), async (re
   }
 });
 
-app.post('/api/memory/agent/:agentId/fact', pathTraversalGuard(['agentId']), async (req, res) => {
+app.post('/api/memory/agent/:agentId/fact', authMiddleware(authManager), pathTraversalGuard(['agentId']), async (req, res) => {
   try {
     const { fact, category } = req.body;
     const memory = await persistentMemory.addAgentFact(req.params.agentId, fact, category);
@@ -904,7 +917,7 @@ app.post('/api/memory/agent/:agentId/fact', pathTraversalGuard(['agentId']), asy
   }
 });
 
-app.get('/api/memory/operational', async (req, res) => {
+app.get('/api/memory/operational', authMiddleware(authManager), async (req, res) => {
   try {
     const events = await persistentMemory.getRecentOperationalContext(req.query.hours || 24);
     res.json(events);
@@ -914,20 +927,20 @@ app.get('/api/memory/operational', async (req, res) => {
 });
 
 // Document API Routes
-app.get('/api/documents', (req, res) => {
+app.get('/api/documents', authMiddleware(authManager), (req, res) => {
   const docs = documentStorage.list(req.query);
   res.json(docs);
 });
 
-app.get('/api/documents/categories', (req, res) => {
+app.get('/api/documents/categories', authMiddleware(authManager), (req, res) => {
   res.json(documentStorage.getCategories());
 });
 
-app.get('/api/documents/stats', (req, res) => {
+app.get('/api/documents/stats', authMiddleware(authManager), (req, res) => {
   res.json(documentStorage.getStats());
 });
 
-app.get('/api/documents/:id', pathTraversalGuard(['id']), async (req, res) => {
+app.get('/api/documents/:id', authMiddleware(authManager), pathTraversalGuard(['id']), async (req, res) => {
   try {
     const doc = await documentStorage.get(req.params.id);
     if (!doc) return res.status(404).json({ error: 'Document not found' });
@@ -937,7 +950,7 @@ app.get('/api/documents/:id', pathTraversalGuard(['id']), async (req, res) => {
   }
 });
 
-app.post('/api/documents', async (req, res) => {
+app.post('/api/documents', authMiddleware(authManager), async (req, res) => {
   try {
     const doc = await documentStorage.create(req.body);
     res.json(doc);
@@ -946,7 +959,7 @@ app.post('/api/documents', async (req, res) => {
   }
 });
 
-app.put('/api/documents/:id', pathTraversalGuard(['id']), async (req, res) => {
+app.put('/api/documents/:id', authMiddleware(authManager), pathTraversalGuard(['id']), async (req, res) => {
   try {
     const doc = await documentStorage.update(req.params.id, req.body);
     res.json(doc);
@@ -955,7 +968,7 @@ app.put('/api/documents/:id', pathTraversalGuard(['id']), async (req, res) => {
   }
 });
 
-app.delete('/api/documents/:id', pathTraversalGuard(['id']), async (req, res) => {
+app.delete('/api/documents/:id', authMiddleware(authManager), pathTraversalGuard(['id']), async (req, res) => {
   try {
     await documentStorage.delete(req.params.id);
     res.json({ success: true });
@@ -964,7 +977,7 @@ app.delete('/api/documents/:id', pathTraversalGuard(['id']), async (req, res) =>
   }
 });
 
-app.get('/api/documents/search/:query', async (req, res) => {
+app.get('/api/documents/search/:query', authMiddleware(authManager), async (req, res) => {
   try {
     const results = await documentStorage.search(req.params.query, req.query);
     res.json(results);
@@ -973,7 +986,7 @@ app.get('/api/documents/search/:query', async (req, res) => {
   }
 });
 
-app.post('/api/documents/template/:type', async (req, res) => {
+app.post('/api/documents/template/:type', authMiddleware(authManager), async (req, res) => {
   try {
     const content = await documentStorage.generateFromTemplate(req.params.type, req.body);
     res.json({ content });
@@ -983,7 +996,7 @@ app.post('/api/documents/template/:type', async (req, res) => {
 });
 
 // Backup API Routes
-app.get('/api/backups', async (req, res) => {
+app.get('/api/backups', authMiddleware(authManager), async (req, res) => {
   try {
     const backups = await backupSystem.listBackups();
     res.json(backups);
@@ -992,7 +1005,7 @@ app.get('/api/backups', async (req, res) => {
   }
 });
 
-app.post('/api/backups', sensitiveOpLimiter, async (req, res) => {
+app.post('/api/backups', authMiddleware(authManager), sensitiveOpLimiter, async (req, res) => {
   try {
     const backup = await backupSystem.createBackup(req.body);
     securityAudit.logAccess('backup_create', '/api/backups', req.ip, req.user?.id, 'POST');
@@ -1002,7 +1015,7 @@ app.post('/api/backups', sensitiveOpLimiter, async (req, res) => {
   }
 });
 
-app.get('/api/backups/:id', async (req, res) => {
+app.get('/api/backups/:id', authMiddleware(authManager), async (req, res) => {
   try {
     const info = await backupSystem.getBackupInfo(req.params.id);
     res.json(info);
@@ -1011,7 +1024,7 @@ app.get('/api/backups/:id', async (req, res) => {
   }
 });
 
-app.post('/api/backups/:id/restore', sensitiveOpLimiter, async (req, res) => {
+app.post('/api/backups/:id/restore', authMiddleware(authManager), sensitiveOpLimiter, async (req, res) => {
   try {
     securityAudit.logAccess('backup_restore', `/api/backups/${req.params.id}/restore`, req.ip, req.user?.id, 'POST');
     const result = await backupSystem.restore(req.params.id, req.body);
@@ -1021,7 +1034,7 @@ app.post('/api/backups/:id/restore', sensitiveOpLimiter, async (req, res) => {
   }
 });
 
-app.delete('/api/backups/:id', async (req, res) => {
+app.delete('/api/backups/:id', authMiddleware(authManager), async (req, res) => {
   try {
     await backupSystem.deleteBackup(req.params.id);
     res.json({ success: true });
@@ -1163,11 +1176,11 @@ app.get('/api/security/selfcheck', authMiddleware(authManager), adminAuth, (req,
 });
 
 // Language API Routes
-app.get('/api/languages', (req, res) => {
+app.get('/api/languages', authMiddleware(authManager), (req, res) => {
   res.json(languageSupport.listLanguages());
 });
 
-app.post('/api/languages/detect', (req, res) => {
+app.post('/api/languages/detect', authMiddleware(authManager), (req, res) => {
   const { text } = req.body;
   if (!text) {
     return res.status(400).json({ error: 'Text required' });
@@ -1182,12 +1195,12 @@ app.post('/api/languages/detect', (req, res) => {
   });
 });
 
-app.get('/api/languages/:code/greeting', (req, res) => {
+app.get('/api/languages/:code/greeting', authMiddleware(authManager), (req, res) => {
   const greeting = languageSupport.getGreeting(req.params.code);
   res.json({ greeting, language: req.params.code });
 });
 
-app.get('/api/languages/:code/emergency-phrases', (req, res) => {
+app.get('/api/languages/:code/emergency-phrases', authMiddleware(authManager), (req, res) => {
   const phrases = languageSupport.getEmergencyPhrases(req.params.code);
   res.json({ phrases, language: req.params.code });
 });

@@ -44,8 +44,8 @@
         display: block;
       }
     </style>
-    <script type="module" crossorigin src="/assets/index-DqJCV3w9.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-BsVWKCmx.css">
+    <script type="module" crossorigin src="/assets/index-DEXIjO3B.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-egcClL4J.css">
   </head>
   <body>
     <div id="offline-banner" class="offline-banner">
@@ -61,19 +61,6 @@
           try {
             const registration = await navigator.serviceWorker.register('/sw.js');
             console.log('ServiceWorker registered:', registration.scope);
-            
-            // Check for updates
-            registration.addEventListener('updatefound', () => {
-              const newWorker = registration.installing;
-              newWorker.addEventListener('statechange', () => {
-                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                  // New version available
-                  if (confirm('New version available. Reload to update?')) {
-                    window.location.reload();
-                  }
-                }
-              });
-            });
           } catch (error) {
             console.error('ServiceWorker registration failed:', error);
           }

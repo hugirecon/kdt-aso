@@ -341,8 +341,15 @@ function getCorsOptions(allowedOrigins = []) {
 
   return {
     origin: (origin, callback) => {
-      // Allow requests with no origin (server-to-server, curl, etc.)
-      if (!origin) return callback(null, true);
+      // Only allow requests with no origin in development environment
+      if (!origin) {
+        if (process.env.NODE_ENV !== 'production') {
+          return callback(null, true);
+        } else {
+          console.warn(`[SECURITY] CORS blocked request with no origin header`);
+          return callback(new Error('Origin header required'));
+        }
+      }
       
       if (origins.includes(origin)) {
         callback(null, true);

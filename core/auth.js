@@ -98,7 +98,10 @@ class AuthManager {
         jti  // Token ID for blacklist
       },
       JWT_SECRET,
-      { expiresIn: JWT_EXPIRY }
+      { 
+        expiresIn: JWT_EXPIRY,
+        algorithm: 'HS256'  // Explicitly specify algorithm to prevent "none" algorithm attacks
+      }
     );
 
     // Register session and evict old ones if over limit
@@ -128,7 +131,9 @@ class AuthManager {
    */
   verifyToken(token) {
     try {
-      const decoded = jwt.verify(token, JWT_SECRET);
+      const decoded = jwt.verify(token, JWT_SECRET, { 
+        algorithms: ['HS256']  // Only allow secure HMAC algorithms
+      });
       
       // Check JWT blacklist
       if (_jwtBlacklist) {

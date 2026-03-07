@@ -1,8 +1,44 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react'
 
+/** Sanitize HTML to prevent XSS — only allow safe tags and attributes */
+function sanitizeHtml(html: string): string {
+  const allowedTags = new Set(['p', 'strong', 'em', 'code', 'pre', 'h1', 'h2', 'h3', 'h4', 'hr', 'li', 'ul', 'ol', 'blockquote', 'br', 'a'])
+  const allowedAttrs: Record<string, Set<string>> = { a: new Set(['href', 'title']) }
+  
+  // Strip all tags except allowed ones, remove all event handlers and dangerous attrs
+  return html
+    // Remove script/style/iframe tags and their content entirely
+    .replace(/<(script|style|iframe|object|embed|form|input|textarea|button|select|svg|math)[^>]*>[\s\S]*?<\/\1>/gi, '')
+    .replace(/<(script|style|iframe|object|embed|form|input|textarea|button|select|svg|math)[^>]*\/?>/gi, '')
+    // Remove event handlers (onclick, onerror, onload, etc.)
+    .replace(/\s+on\w+\s*=\s*(['"]?)[\s\S]*?\1/gi, '')
+    // Remove javascript: and data: URLs
+    .replace(/href\s*=\s*(['"]?)\s*javascript:/gi, 'href=$1#blocked:')
+    .replace(/href\s*=\s*(['"]?)\s*data:/gi, 'href=$1#blocked:')
+    // Remove any remaining tags not in allowlist
+    .replace(/<\/?([a-zA-Z][a-zA-Z0-9]*)[^>]*>/g, (match, tag) => {
+      const lower = tag.toLowerCase()
+      if (allowedTags.has(lower)) {
+        // For allowed tags, strip non-allowed attributes
+        if (match.startsWith('</')) return `</${lower}>`
+        const allowed = allowedAttrs[lower]
+        if (!allowed) return match.replace(/\s+[a-zA-Z-]+=(['"]?)[\s\S]*?\1/g, '')
+        return match
+      }
+      return '' // Strip non-allowed tags
+    })
+}
+
 /** Lightweight markdown → HTML for chat messages */
 function renderMarkdown(text: string): string {
-  let html = text
+  // First escape HTML entities to prevent injection
+  let escaped = text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+  
+  let html = escaped
     // Code blocks first (preserve content)
     .replace(/```(\w*)\n([\s\S]*?)```/g, '<pre><code>$2</code></pre>')
     // Inline code
@@ -25,13 +61,13 @@ function renderMarkdown(text: string): string {
     // Wrap consecutive <li> in <ul>
     .replace(/((?:<li>.*<\/li>\n?)+)/g, '<ul>$1</ul>')
     // Blockquotes
-    .replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>')
+    .replace(/^&gt; (.+)$/gm, '<blockquote>$1</blockquote>')
     // Paragraphs — wrap remaining lines that aren't already wrapped in tags
     .replace(/^(?!<[a-z])((?!\s*$).+)$/gm, '<p>$1</p>')
     // Clean up empty paragraphs
     .replace(/<p>\s*<\/p>/g, '')
 
-  return html
+  return sanitizeHtml(html)
 }
 
 interface Message {
